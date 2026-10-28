@@ -24,7 +24,6 @@ function call(payload) {
     played: 14, stars: 39,
     skills: [{ name: 'Память', ok: 12, tot: 20 }, { name: 'Буквы и чтение', ok: 9, tot: 12 }, { name: 'Внимание и реакция', ok: 30, tot: 34 }],
     recent: [{ n: 14, k: 'maze', errs: 2, sec: 62 }, { n: 14, k: 'odd', errs: 1, sec: 33 }],
-    levels: [25]
   };
   await call({ ...facts, scope: 'parent' });
   const parent = JSON.parse(JSON.stringify(capture));

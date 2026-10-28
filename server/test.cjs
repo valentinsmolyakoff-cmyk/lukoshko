@@ -1,5 +1,6 @@
 const assert=require('node:assert/strict');
 const handler=require('./api/advice');
+const catalog=require('./level-catalog.json');
 const origin='https://valentinsmolyakoff-cmyk.github.io';
 async function call(body,extra={}){
  let result={}; const req={method:'POST',headers:{origin,'content-type':'application/json','x-forwarded-for':'test'},body,...extra};
@@ -31,11 +32,11 @@ async function call(body,extra={}){
  const extra={headers:{origin,'content-type':'application/json','x-forwarded-for':'scope17'}};
  const lv={number:29,attempt:'test-17-a',errors:2,seconds:42,stars:2,completed:true,rounds:[{index:0,errors:2,seconds:42}]};
  global.fetch=async(url,o)=>{generated++;sent=JSON.parse(o.body);return {ok:true,json:async()=>({candidates:[{content:{parts:[{text:'На уровне 29 было два ошибочных действия. Попробуйте не спешить и внимательно рассмотреть картинки, прежде чем выбирать ответ. Вариант '+generated+'.'}]}}]})}};
- const level=await call({...valid,scope:'level',level:lv},extra);assert.equal(level.status,200);assert.equal(level.body.scope,'level');const levelPrompt=sent.systemInstruction.parts[0].text;const payload=JSON.parse(sent.contents[0].parts[0].text);assert.equal(payload.lastAttempt.errors,2);assert.ok(payload.levelDefinition.rounds[0].instruction);assert.equal(payload.lastAttempt.attempt,lv.attempt);
+ const level=await call({...valid,scope:'level',level:lv},extra);assert.equal(level.status,200);assert.equal(level.body.scope,'level');const levelPrompt=sent.systemInstruction.parts[0].text;const payload=JSON.parse(sent.contents[0].parts[0].text);assert.equal(payload.lastAttempt.errors,2);assert.equal(payload.level.title,catalog[29].title);assert(!('levelDefinition' in payload));assert.equal(payload.lastAttempt.attempt,lv.attempt);
  assert.equal((await call({...valid,scope:'level',level:lv},extra)).body.cached,true);
  assert.equal((await call({...valid,scope:'level',level:lv,refresh:true},extra)).body.cached,false);
  assert.equal((await call({...valid,scope:'level',level:{...lv,attempt:'test-17-b'}},extra)).body.cached,false);
- const parent=await call({...valid,recent:[{n:29,k:'mem',errs:2,sec:42}]},extra);assert.equal(parent.body.scope,'parent');assert.notEqual(sent.systemInstruction.parts[0].text,levelPrompt);assert.equal(JSON.parse(sent.contents[0].parts[0].text).recent[0].errs,2);
+ const parent=await call({...valid,recent:[{n:29,k:'mem',errs:2,sec:42}]},extra);assert.equal(parent.body.scope,'parent');assert.notEqual(sent.systemInstruction.parts[0].text,levelPrompt);const parentPayload=JSON.parse(sent.contents[0].parts[0].text);assert.equal(parentPayload.recent[0].errs,2);assert(!('levels' in parentPayload));
  for(const invalid of [{scope:'other'},{scope:'level',level:{...lv,number:'__proto__'}},{scope:'level',level:{...lv,rounds:[{index:99,errors:0,seconds:1}]}},{recent:[{n:29,k:'injection',errs:0,sec:1}]}])assert.equal((await call({...valid,...invalid},extra)).status,400);
  assert.equal((await call({...valid,skills:[{name:'Память',ok:12,tot:10}]})).status,400);
  console.log('PASS: skills are counts of correct actions and cannot exceed attempts');
