@@ -2730,23 +2730,27 @@ function adviceFacts(){
  recent:(save.roundLog||[]).slice(-6).map(r=>({n:n(r.n,200),k:r.k,errs:n(r.errs,100000),sec:n(r.sec,86400)})),
  levels:(practiceLevels().match(/\d+/g)||[]).map(Number).filter(v=>v>=1&&v<=200).slice(0,3)};
 }
-async function aiFetchAdvice(force=false,scope='parent',level=null){
+async function aiFetchAdvice(force=false,scope='parent',level=null,previousText=''){
+ let previousHash;
+ if(force&&previousText){const normalized=previousText.toLocaleLowerCase('ru').replace(/[^а-яёa-z0-9]/g,'');const digest=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(normalized));previousHash=Array.from(new Uint8Array(digest),b=>b.toString(16).padStart(2,'0')).join('');}
  if(!GEMINI_PROXY_URL)throw new Error('Сервер рекомендаций пока не настроен.');
  const ctrl=new AbortController(),timer=setTimeout(()=>ctrl.abort(),30000);
  try{
   const r=await fetch(GEMINI_PROXY_URL,{method:'POST',headers:{'Content-Type':'application/json'},credentials:'omit',signal:ctrl.signal,
-   body:JSON.stringify({...adviceFacts(),scope,...(scope==='level'?{level}:{}),refresh:force})});
+   body:JSON.stringify({...adviceFacts(),scope,...(scope==='level'?{level}:{}),...(previousHash?{previousHash}:{}),refresh:force})});
   let data;try{data=await r.json();}catch(e){throw new Error('Сервер прислал неполный ответ. Попробуйте ещё раз.');}
   if(!r.ok){
    if(data.error==='rate_limit')throw new Error('Достигнут лимит новых запросов. Уже полученный совет остаётся доступен; новую генерацию можно попробовать через час.');
    if(r.status===429)throw new Error('Сервис ИИ временно ограничил запросы. Повторите попытку немного позже.');
    if(data.upstreamStatus===503||data.reason==='timeout')throw new Error('Сервис ИИ сейчас перегружен. Попробуйте ещё раз через минуту.');
    if(data.error==='data')throw new Error('Не удалось обработать статистику игры. Обновите страницу и повторите вход.');
+   if(data.error==='duplicate_response')throw new Error('ИИ вернул тот же текст. Новый совет не получен; попробуйте запросить другой позже.');
    if(data.error==='invalid_response')throw new Error('ИИ прислал неподходящий ответ. Можно запросить другой.');
    throw new Error('Не удалось получить ответ ИИ. Повторите запрос немного позже.');
   }
   if(scope==='level'&&data.scope!=='level')throw new Error('Сервер обновляется. Попробуйте запросить разбор уровня через минуту.');
   if(!aiTextIsGood(data.text))throw new Error('ИИ прислал неподходящий ответ. Можно запросить другой.');
+  if(force&&previousText&&data.text.toLocaleLowerCase('ru').replace(/[^а-яёa-z0-9]/g,'')===previousText.toLocaleLowerCase('ru').replace(/[^а-яёa-z0-9]/g,''))throw new Error('ИИ вернул тот же текст. Новый совет не получен; попробуйте запросить другой позже.');
   return {...data,text:data.text};
  }catch(e){
   if(e.name==='AbortError')throw new Error('ИИ не успел ответить за 30 секунд. Повторите запрос немного позже.');
@@ -2763,7 +2767,7 @@ function parentAdvice(force=false){
  if(!parentAdvicePromise){
   parentAdviceError=false;
   const version=++parentAdviceVersion;
-  parentAdvicePromise=aiFetchAdvice(force).then(data=>{
+  parentAdvicePromise=aiFetchAdvice(force,'parent',null,parentAdviceResult?.text||'').then(data=>{
    const date=data.generatedAt?new Date(data.generatedAt):new Date();
    const time=Number.isNaN(date.getTime())?'':date.toLocaleTimeString('ru-RU',{hour:'2-digit',minute:'2-digit'});
    const result={text:data.text,when:'Рекомендация ИИ · '+time+(data.cached?' · ранее сформирована по этим результатам':' · новый ответ'),requestId:data.requestId};
@@ -2788,7 +2792,7 @@ async function aiAdviceForLevel(){
  const attempt=summary.attempt,previous=levelAdviceResults.get(attempt);
  box.style.display='block';box.textContent='ИИ разбирает именно эту попытку уровня '+summary.number+'…';btn.disabled=true;
  try{
-  const data=await aiFetchAdvice(!!previous,'level',summary);
+  const data=await aiFetchAdvice(!!previous,'level',summary,previous?.text||'');
   levelAdviceResults.set(attempt,data);if(levelAdviceResults.size>12)levelAdviceResults.delete(levelAdviceResults.keys().next().value);
   if(G.aiLevelSummary?.attempt!==attempt)return;
   box.textContent=data.text;btn.textContent='Новый разбор этого уровня ИИ';
@@ -2871,7 +2875,7 @@ document.getElementById('btnSay').onclick = ()=>{
 };
 
 /* ---------- старт ---------- */
-try{const u=new URL(location.href);u.searchParams.set('build','17');history.replaceState(null,'',u.href);}catch(e){}
+try{const u=new URL(location.href);u.searchParams.set('build','18');history.replaceState(null,'',u.href);}catch(e){}
 resize();
 document.getElementById('btnSound').textContent = save.sound?'🔊':'🔇';
 renderMenu();
@@ -2884,8 +2888,8 @@ let updatingPage=false;
 const wasControlled=!!navigator.serviceWorker?.controller;
 if('serviceWorker' in navigator){navigator.serviceWorker.addEventListener('controllerchange',()=>{
  if(!wasControlled||updatingPage||!navigator.serviceWorker.controller)return;
- if(sessionStorage.getItem('lukoshko-loaded-build')==='17')return;
- updatingPage=true;sessionStorage.setItem('lukoshko-loaded-build','17');location.reload();
+ if(sessionStorage.getItem('lukoshko-loaded-build')==='18')return;
+ updatingPage=true;sessionStorage.setItem('lukoshko-loaded-build','18');location.reload();
 });}
 
 if('serviceWorker' in navigator && (location.protocol==='http:'||location.protocol==='https:')){
