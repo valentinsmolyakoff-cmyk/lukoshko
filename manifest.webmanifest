@@ -1,0 +1,21 @@
+{
+  "name": "Лукошко — развивающая игра для детей 5+",
+  "short_name": "Лукошко",
+  "description": "100 уровней, 10 миров: ловля, буквы, счёт, память, сортировка и звания. Ёжик Тишка собирает знания.",
+  "lang": "ru",
+  "dir": "ltr",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "display_override": ["fullscreen", "standalone", "minimal-ui"],
+  "orientation": "any",
+  "background_color": "#dff3ff",
+  "theme_color": "#7ddc5a",
+  "categories": ["education", "games", "kids"],
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" },
+    { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
+  ]
+}

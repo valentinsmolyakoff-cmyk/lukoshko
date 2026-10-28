@@ -1,0 +1,14 @@
+# служебное
+lukoshko-site.zip
+.DS_Store
+Thumbs.db
+*.log
+
+# зависимости (в проекте их нет, но пусть будет)
+node_modules/
+.venv/
+__pycache__/
+
+# личные токены никогда не коммитим
+.env
+.env.*

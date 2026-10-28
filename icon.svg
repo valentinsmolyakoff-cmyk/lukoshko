@@ -1,0 +1,58 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#d8f2ff"/>
+      <stop offset="1" stop-color="#e9ffd6"/>
+    </linearGradient>
+    <linearGradient id="fur" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#b57c46"/>
+      <stop offset="1" stop-color="#8a5628"/>
+    </linearGradient>
+    <linearGradient id="wod" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#e0a55f"/>
+      <stop offset="1" stop-color="#b87a33"/>
+    </linearGradient>
+    <radialGradient id="app" cx="0.35" cy="0.3" r="0.8">
+      <stop offset="0" stop-color="#ff8d8d"/>
+      <stop offset="1" stop-color="#d62f3f"/>
+    </radialGradient>
+  </defs>
+
+  <rect width="512" height="512" rx="112" fill="url(#sky)"/>
+  <ellipse cx="256" cy="452" rx="230" ry="86" fill="#bfe89a" opacity="0.85"/>
+
+  <!-- звёздочки -->
+  <g fill="#ffd93d">
+    <path d="M96 118l9 22 24 3-18 16 5 23-20-12-20 12 5-23-18-16 24-3z"/>
+    <path d="M408 152l7 17 19 2-14 13 4 18-16-9-16 9 4-18-14-13 19-2z" opacity="0.9"/>
+    <path d="M340 84l6 14 16 2-12 11 3 15-13-8-13 8 3-15-12-11 16-2z" opacity="0.75"/>
+  </g>
+
+  <!-- ёжик: иголки -->
+  <g fill="#6d421f">
+    <path d="M256 132l26 44 44-18-4 50 52 8-32 36 40 30-50 16 16 44-46-14-14 44-30-36-34 30-8-46-48 10 22-42-46-22 40-26-34-34 50-6 2-50 40 28z" opacity="0.95"/>
+  </g>
+  <!-- тело/мордочка -->
+  <ellipse cx="256" cy="268" rx="112" ry="98" fill="url(#fur)"/>
+  <ellipse cx="256" cy="312" rx="78" ry="58" fill="#f6e3c8"/>
+  <circle cx="226" cy="292" r="12" fill="#3a2a1a"/>
+  <circle cx="286" cy="292" r="12" fill="#3a2a1a"/>
+  <circle cx="230" cy="287" r="4" fill="#fff"/>
+  <circle cx="290" cy="287" r="4" fill="#fff"/>
+  <ellipse cx="256" cy="330" rx="14" ry="11" fill="#3a2a1a"/>
+  <path d="M236 348q20 18 40 0" stroke="#3a2a1a" stroke-width="7" fill="none" stroke-linecap="round"/>
+  <circle cx="196" cy="330" r="14" fill="#ff9db4" opacity="0.55"/>
+  <circle cx="316" cy="330" r="14" fill="#ff9db4" opacity="0.55"/>
+
+  <!-- лукошко -->
+  <path d="M136 356h240l-30 92q-4 14-18 14H184q-14 0-18-14z" fill="url(#wod)"/>
+  <path d="M136 356h240l-6 20H142z" fill="#8a5628"/>
+  <g stroke="#8a5628" stroke-width="7" opacity="0.55">
+    <path d="M168 378l-8 74M212 378l-4 84M256 378v84M300 378l4 84M344 378l8 74"/>
+  </g>
+
+  <!-- яблоко в лукошке -->
+  <circle cx="256" cy="344" r="40" fill="url(#app)"/>
+  <path d="M256 306q2-16 16-22" stroke="#6f4b1f" stroke-width="8" fill="none" stroke-linecap="round"/>
+  <path d="M258 300q22-20 36-2-16 16-36 2z" fill="#4caf50"/>
+</svg>

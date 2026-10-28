@@ -1,0 +1,1235 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>Лукошко — развивающая игра для детей 5+</title>
+<meta name="description" content="Лукошко — развивающая онлайн-игра для детей от 5 лет: 100 уровней, ловля, буквы, счёт, память и звания.">
+<meta name="theme-color" content="#7ddc5a">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Лукошко">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
+<link rel="icon" type="image/svg+xml" href="icon.svg">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+
+<style>
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;height:100%;overflow:hidden;font-family:"Nunito","Comic Sans MS","Segoe UI",system-ui,sans-serif;
+    background:#bfe9ff;user-select:none}
+  #c{position:fixed;inset:0;width:100%;height:100%;display:block;touch-action:none}
+  .hidden{display:none !important}
+
+  /* ---------- HUD ---------- */
+  #hud{position:fixed;left:0;right:0;top:0;display:flex;align-items:center;gap:10px;padding:8px 12px;
+    z-index:5;pointer-events:none}
+  #hud .pill{pointer-events:auto;background:rgba(255,255,255,.92);border-radius:999px;padding:8px 14px;
+    box-shadow:0 4px 0 rgba(0,0,0,.12);font-weight:800;color:#4a3a6a;font-size:16px;display:flex;align-items:center;gap:8px}
+  #btnBack{cursor:pointer;font-size:20px;line-height:1;padding:8px 14px}
+  #btnBack:active{transform:translateY(2px)}
+  #hearts{letter-spacing:2px;font-size:18px}
+  @media (max-width:680px){
+    #hud{gap:6px;padding:6px 8px}
+    #hud .pill{padding:6px 10px;font-size:14px;border-radius:16px}
+    #lvPill{white-space:nowrap}
+    #scorePill{min-width:auto}
+    #bar{height:12px}
+    #promptBox{border-radius:18px;padding:8px 14px}
+  }
+  #bar{flex:1;height:16px;background:rgba(255,255,255,.85);border-radius:999px;overflow:hidden;
+    box-shadow:inset 0 2px 4px rgba(0,0,0,.12);min-width:60px;position:relative}
+  #barFill{height:100%;width:0%;border-radius:999px;background:linear-gradient(90deg,#7be36a,#39c94b);
+    transition:width .25s ease}
+  #scorePill{min-width:92px;justify-content:center}
+  #btnSound{cursor:pointer}
+
+  /* ---------- prompt ---------- */
+  #prompt{position:fixed;top:64px;left:50%;transform:translateX(-50%);z-index:4;pointer-events:none;
+    display:flex;align-items:center;justify-content:center;gap:10px;width:min(94vw,720px);transition:top .25s}
+  #prompt.low{top:auto;bottom:140px}
+  #prompt.low #promptBox{font-size:clamp(14px,2.1vw,21px)}
+  #promptBox{flex:1 1 auto;background:rgba(255,255,255,.96);border-radius:22px;padding:10px 20px;font-size:clamp(15px,2.4vw,24px);
+    font-weight:800;color:#43346b;text-align:center;box-shadow:0 6px 0 rgba(0,0,0,.12)}
+  #btnSay{pointer-events:auto;cursor:pointer;background:#ffd93d;border:none;border-radius:50%;width:44px;height:44px;
+    font-size:20px;box-shadow:0 4px 0 #d8a800;flex:none}
+  #btnSay:active{transform:translateY(2px);box-shadow:0 2px 0 #d8a800}
+
+  /* ---------- screens ---------- */
+  .screen{position:fixed;inset:0;z-index:10;display:flex;flex-direction:column;align-items:center;justify-content:center;
+    padding:18px;overflow:auto;background:radial-gradient(circle at 50% 20%,#ffffff 0%,#dff3ff 45%,#bfe4ff 100%)}
+  .card{background:#fff;border-radius:28px;padding:22px 24px;max-width:760px;width:100%;text-align:center;
+    box-shadow:0 12px 0 rgba(90,110,160,.18),0 20px 40px rgba(90,110,160,.25)}
+  h1{margin:0 0 6px;font-size:clamp(28px,6vw,46px);color:#4a3a6a;letter-spacing:1px}
+  h2{margin:0 0 10px;font-size:clamp(20px,4vw,30px);color:#4a3a6a}
+  p.sub{margin:0 0 18px;color:#7a6a95;font-size:clamp(14px,2.4vw,18px);font-weight:700}
+  .btn{cursor:pointer;border:none;border-radius:999px;padding:14px 30px;font-size:clamp(17px,2.6vw,22px);
+    font-weight:900;color:#fff;font-family:inherit;background:linear-gradient(#7ddc5a,#44b52c);
+    box-shadow:0 6px 0 #2e8a1c;margin:6px;transition:transform .08s}
+  .btn:active{transform:translateY(4px);box-shadow:0 2px 0 #2e8a1c}
+  .btn.blue{background:linear-gradient(#6cc4ff,#2f95e0);box-shadow:0 6px 0 #1f6ea8}
+  .btn.blue:active{box-shadow:0 2px 0 #1f6ea8}
+  .btn.pink{background:linear-gradient(#ff9ad5,#e8559f);box-shadow:0 6px 0 #b83a7b}
+  .btn.pink:active{box-shadow:0 2px 0 #b83a7b}
+  .btn.small{padding:10px 20px;font-size:16px}
+
+  /* map */
+  #mapWrap{width:100%;max-width:1080px}
+  .world{margin:0 0 16px;background:rgba(255,255,255,.9);border-radius:22px;padding:12px 14px;
+    box-shadow:0 6px 0 rgba(90,110,160,.14)}
+  .world h3{margin:0 0 10px;font-size:18px;color:#4a3a6a;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .world h3 .medal{font-size:14px;background:#fff3c4;border-radius:999px;padding:3px 10px;color:#8a6b00}
+  .tiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(78px,1fr));gap:8px}
+  .tile{position:relative;cursor:pointer;border:none;font-family:inherit;aspect-ratio:1;border-radius:18px;
+    background:linear-gradient(#ffffff,#eaf4ff);box-shadow:0 4px 0 rgba(90,110,160,.22);font-weight:900;color:#4a3a6a;
+    font-size:20px;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:2px;line-height:1}
+  .tile:active{transform:translateY(3px);box-shadow:0 1px 0 rgba(90,110,160,.22)}
+  .tile.locked{filter:grayscale(1);opacity:.55;cursor:not-allowed}
+  .tile .st{font-size:11px;letter-spacing:1px;margin-top:2px;color:#f0b400}
+  .tile.boss{background:linear-gradient(#fff3c4,#ffe08a)}
+  .tile .crown{position:absolute;top:-8px;right:-4px;font-size:18px}
+
+  /* result */
+  #starsRow{font-size:clamp(34px,10vw,64px);letter-spacing:6px;margin:4px 0 10px;min-height:1.2em}
+  #starsRow span{display:inline-block;transform:scale(0);animation:pop .45s cubic-bezier(.2,1.7,.4,1) forwards}
+  @keyframes pop{to{transform:scale(1)}}
+  .rankLine{font-size:clamp(15px,3vw,20px);font-weight:900;color:#e8559f;margin:6px 0 2px}
+  .bigscore{font-size:clamp(22px,5vw,34px);font-weight:900;color:#4a3a6a}
+
+  /* rank bar in menu */
+  .rankBox{background:#fff8dc;border-radius:18px;padding:12px 16px;margin:0 0 16px;font-weight:800;color:#8a6b00}
+  .rankBar{height:14px;background:#fff;border-radius:999px;overflow:hidden;margin-top:8px;box-shadow:inset 0 2px 3px rgba(0,0,0,.12)}
+  .rankBar div{height:100%;background:linear-gradient(90deg,#ffd93d,#ff9f1c);width:0%;transition:width .4s}
+  .mascot{font-size:clamp(52px,14vw,96px);line-height:1}
+  .row{display:flex;flex-wrap:wrap;justify-content:center;gap:6px}
+  #toast{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%) scale(.6);z-index:20;pointer-events:none;
+    background:#fff;border-radius:24px;padding:16px 28px;font-size:clamp(18px,4vw,28px);font-weight:900;color:#4a3a6a;
+    box-shadow:0 10px 30px rgba(0,0,0,.25);opacity:0;transition:.3s}
+  #toast.show{opacity:1;transform:translate(-50%,-50%) scale(1)}
+  .tiny{font-size:12px;color:#9a8ab0;font-weight:700;margin-top:10px}
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+
+<div id="hud" class="hidden">
+  <div class="pill" id="btnBack">🗺️</div>
+  <div class="pill" id="lvPill">1</div>
+  <div id="bar"><div id="barFill"></div></div>
+  <div class="pill" id="hearts">❤️❤️❤️❤️❤️</div>
+  <div class="pill" id="scorePill">0</div>
+  <div class="pill" id="btnSound">🔊</div>
+</div>
+
+<div id="prompt" class="hidden">
+  <div id="promptBox">…</div>
+  <button id="btnSay">🔊</button>
+</div>
+
+<!-- МЕНЮ -->
+<div class="screen" id="scrMenu">
+  <div class="card">
+    <div class="mascot">🦔🧺</div>
+    <h1>ЛУКОШКО</h1>
+    <p class="sub">Ёжик Тишка собирает знания · 100 уровней · 5+</p>
+    <div class="rankBox" id="rankBox">
+      <div id="rankName">Почемучка</div>
+      <div class="rankBar"><div id="rankFill"></div></div>
+      <div style="font-size:13px;margin-top:6px" id="rankInfo">0 из 300 звёзд</div>
+    </div>
+    <div class="row">
+      <button class="btn" id="btnPlay">Играть ▶</button>
+      <button class="btn blue" id="btnMap">Все уровни 🗺️</button>
+    </div>
+    <div class="tiny">Управление: мышка или палец. Разрешено ошибаться — проиграть нельзя.</div>
+  </div>
+</div>
+
+<!-- КАРТА -->
+<div class="screen hidden" id="scrMap">
+  <div class="card" style="max-width:1100px">
+    <div class="row" style="justify-content:space-between;align-items:center">
+      <button class="btn small blue" id="btnMenu">◀ Меню</button>
+      <h2 style="margin:0">Карта уровней</h2>
+      <div class="pill" id="mapStars" style="background:#fff3c4">⭐ 0</div>
+    </div>
+    <div id="mapWrap" style="margin-top:14px;text-align:left"></div>
+  </div>
+</div>
+
+<!-- РЕЗУЛЬТАТ -->
+<div class="screen hidden" id="scrResult">
+  <div class="card">
+    <div class="mascot" id="resMascot">🦔</div>
+    <h2 id="resTitle">Молодец!</h2>
+    <div id="starsRow"></div>
+    <div class="bigscore" id="resScore">0 очков</div>
+    <div class="rankLine" id="resRankLine"></div>
+    <p class="sub" id="resHint" style="margin-top:12px"></p>
+    <div class="row">
+      <button class="btn blue" id="btnRetry">Ещё раз 🔁</button>
+      <button class="btn" id="btnNext">Дальше ▶</button>
+      <button class="btn pink" id="btnToMap">Карта 🗺️</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+"use strict";
+/* ============================================================
+   ЛУКОШКО — развивающая игра для детей 5+
+   Прототип: 100 уровней, 7 типов мини-игр.
+   ============================================================ */
+
+/* ---------- 1. МИРЫ ---------- */
+const WORLDS = [
+  {name:'Яблоневый сад',  emoji:'🍎', sky:['#d7f2ff','#ecffd8']},
+  {name:'Цветочная поляна',emoji:'🌸', sky:['#ffe4f6','#fff8d6']},
+  {name:'Букворечка',      emoji:'🔤', sky:['#d6efff','#e9fbff']},
+  {name:'Счётная горка',   emoji:'🔢', sky:['#ffeccc','#fff5e0']},
+  {name:'Лесная школа',    emoji:'🦉', sky:['#e2ffe2','#f4fff2']},
+  {name:'Морской порт',    emoji:'⛵', sky:['#c9ecff','#b7e6ff']},
+  {name:'Космо-станция',   emoji:'🚀', sky:['#141c46','#2e1c52']},
+  {name:'Город Профессий', emoji:'🏙️', sky:['#eef3ff','#ffe8e8']},
+  {name:'Музыкальный замок',emoji:'🎵',sky:['#f3e6ff','#e8f0ff']},
+  {name:'Звёздная башня',  emoji:'⭐', sky:['#1a1140','#3d1d63']},
+];
+
+/* ---------- 2. УРОВНИ ----------
+   k:'catch'  — ловить падающее
+   k:'word'   — собирать слово/цифры по порядку
+   k:'sort'   — раскладывать по корзинкам (перетаскивание)
+   k:'mem'    — найти пары
+   k:'odd'    — что лишнее
+   k:'seq'    — продолжи узор
+   k:'choice' — вопрос с картинками
+   Уровень = набор раундов (1..5). Боссы = 3–5 раундов.
+------------------------------------------------------------------ */
+const c = (q,good,bad,need,o={}) => Object.assign({k:'catch',q,good,bad,need}, o);
+
+const LEVELS = [
+/* ===== МИР 1. Яблоневый сад (1–10) ===== */
+{n:1, w:0, t:'Первое яблоко', r:[c('Лови яблоки в лукошко!',['🍎'],[],5,{speed:.7,rate:1150})]},
+{n:2, w:0, t:'Корзинка', r:[c('Собирай яблочки — красные и зелёные',['🍎','🍏'],[],8,{speed:.8,rate:1050})]},
+{n:3, w:0, t:'Не всё ловится', r:[c('Яблоки ловим, листики пропускаем',['🍎','🍐'],['🍂'],8,{speed:.85,rate:980})]},
+{n:4, w:0, t:'Только красные', r:[c('Лови только КРАСНЫЕ яблоки',['🍎','🍒'],['🍐','🍋','🍏'],8,{speed:.9,rate:930})]},
+{n:5, w:0, t:'Съедобное', r:[c('Лови то, что можно съесть',['🍎','🍐','🍌','🍇'],['👟','🪨','🧦'],9,{speed:.95,rate:900})]},
+{n:6, w:0, t:'Ровно пять!', r:[c('Поймай ровно 5 яблок',['🍎'],[],5,{exact:true,speed:.9,rate:950,say:'Поймай ровно пять яблок и остановись!'})]},
+{n:7, w:0, t:'Большие яблоки', r:[c('Лови только БОЛЬШИЕ яблоки',['🍎'],['🍎'],6,{sizeRule:'big',speed:1,rate:900})]},
+{n:8, w:0, t:'Гусеница-воришка', r:[c('Лови яблоки, гусеницу не трогай!',['🍎','🍐'],['🐛'],10,{speed:1.05,rate:880})]},
+{n:9, w:0, t:'Комбо!', r:[c('Собирай всё вкусное без промахов',['🍎','🍒','🍐'],['🍂','🐛','🪨'],12,{speed:1.12,rate:850})]},
+{n:10,w:0, t:'БОСС: Дождь из яблок', r:[
+    c('Сначала яблоки!',['🍎'],[],8,{speed:1.2,rate:800}),
+    c('А теперь груши!',['🍐'],['🍎','🍂'],6,{speed:1.25,rate:780})]},
+/* ===== МИР 2. Цветочная поляна (11–20) ===== */
+{n:11,w:1, t:'Только жёлтые', r:[c('Лови только ЖЁЛТОЕ',['🌻','🌼','🍋','🌟'],['🌹','🫐','🍀'],8,{speed:.95,rate:900})]},
+{n:12,w:1, t:'Круглое', r:[c('Лови только КРУГЛОЕ',['🔴','🔵','🟡'],['⬛','🟩','🔺'],8,{speed:1,rate:880})]},
+{n:13,w:1, t:'Красное и круглое', r:[c('Лови красные КРУГИ, а красные квадраты пропускай',['🔴'],['🟥','🔵','🟨'],8,{speed:1.05,rate:870})]},
+{n:14,w:1, t:'Две корзинки', r:[{k:'sort',q:'Перетащи мышкой в свою корзинку!',
+    bins:[{e:'🔴',match:['🔴','🍎','🍓']},{e:'🔵',match:['🔵','🫐','💙']}],
+    items:['🔴','🍎','🍓','🔵','🫐','💙'],need:8,rate:1900}]},
+{n:15,w:1, t:'Сортировка форм', r:[{k:'sort',q:'Круги — к кругу, квадраты — к квадрату, треугольники — к треугольнику',
+    bins:[{e:'⚪',match:['🔴','🔵','🟠']},{e:'⬛',match:['🟥','🟦','🟩']},{e:'🔺',match:['🔺','🔻','🔼']}],
+    items:['🔴','🔵','🟠','🟥','🟦','🟩','🔺','🔻','🔼'],need:8,rate:2000}]},
+{n:16,w:1, t:'Маленькие друзья', r:[c('Лови маленьких букашек, больших зверей не трогай',['🐞','🐝','🐜','🦋'],['🐘','🦒','🐳'],8,{speed:1,rate:880})]},
+{n:17,w:1, t:'Букет для мамы', r:[c('Собирай цветы, а бабочек и пчёлок не обижай',['🌷','🌹','🌻','🌸'],['🐝','🦋','🐞'],10,{speed:1.05,rate:860})]},
+{n:18,w:1, t:'Радуга', r:[c('Собери по одному шарику каждого цвета',['🔴','🟠','🟡','🟢','🔵','🟣'],[],6,{unique:true,speed:1,rate:820})]},
+{n:19,w:1, t:'Два признака', r:[c('Лови ЖЁЛТЫЕ КРУГИ — звёзды не нужны',['🟡','🍋'],['🌟','🔵','🟨','🌻'],10,{speed:1.15,rate:830})]},
+{n:20,w:1, t:'БОСС: Радужная бабочка', r:[
+    {k:'sort',q:'Разложи лепестки по цвету',bins:[{e:'🔴',match:['🔴','🍎']},{e:'🔵',match:['🔵','🫐']},{e:'🟡',match:['🟡','🍋']}],
+      items:['🔴','🍎','🔵','🫐','🟡','🍋'],need:6,rate:1750},
+    c('Бабочка прилетела — лови только её!',['🦋'],['🐝','🍂','🐞'],6,{speed:1.2,rate:800})]},
+/* ===== МИР 3. Букворечка (21–30) ===== */
+{n:21,w:2, t:'Буква А', r:[c('Лови только букву А',['А'],['О','У','И','Ы'],5,{letters:true,speed:.85,rate:1000})]},
+{n:22,w:2, t:'Слово КОТ', r:[{k:'word',q:'Собери слово КОТ — лови буквы по порядку!',w:'КОТ'}]},
+{n:23,w:2, t:'Слово ДОМ', r:[{k:'word',q:'Собери слово ДОМ',w:'ДОМ'}]},
+{n:24,w:2, t:'Слово СЫР', r:[{k:'word',q:'Собери слово СЫР',w:'СЫР'}]},
+{n:25,w:2, t:'Слово РЫБА', r:[{k:'word',q:'Собери слово РЫБА',w:'РЫБА'}]},
+{n:26,w:2, t:'Гласные', r:[c('Лови только гласные буквы (красные)',['А','О','У','И','Ы','Э','Ю','Я'],['К','М','П','Р','С','Т'],8,{letters:true,vowel:true,speed:1,rate:880})]},
+{n:27,w:2, t:'Слово МАМА', r:[{k:'word',q:'Собери слово МАМА',w:'МАМА'}]},
+{n:28,w:2, t:'Слово ЛИСА', r:[{k:'word',q:'Собери слово ЛИСА',w:'ЛИСА',speed:1.15}]},
+{n:29,w:2, t:'Слово ЗИМА', r:[{k:'word',q:'Собери слово ЗИМА',w:'ЗИМА',speed:1.2}]},
+{n:30,w:2, t:'БОСС: Букворечка', r:[
+    {k:'word',q:'Собери слово КОШКА',w:'КОШКА',speed:1.1},
+    {k:'word',q:'Собери слово ЗАЯЦ',w:'ЗАЯЦ',speed:1.2}]},
+/* ===== МИР 4. Счётная горка (31–40) ===== */
+{n:31,w:3, t:'Ровно три', r:[c('Поймай ровно ТРИ яблока',['🍎'],[],3,{exact:true,speed:.9,rate:950,say:'Поймай ровно три яблока'})]},
+{n:32,w:3, t:'Цифра 3', r:[c('Лови только цифру 3',['3'],['1','5','8','2'],5,{letters:true,speed:.9,rate:930})]},
+{n:33,w:3, t:'Сколько яблок?', r:[{k:'choice',q:'Сколько здесь яблок?',visual:'🍎🍎🍎🍎',opts:['3','4','5'],ans:'4'}]},
+{n:34,w:3, t:'Больше пяти', r:[c('Лови цифры БОЛЬШЕ 5',['6','7','8','9'],['1','2','3','4','5'],8,{letters:true,speed:1,rate:880})]},
+{n:35,w:3, t:'2 + 1', r:[{k:'catch',q:'Сколько будет 2 + 1 ? Лови ответ!',good:['3'],bad:['2','4','5'],need:4,letters:true,speed:.95,rate:900}]},
+{n:36,w:3, t:'По порядку', r:[{k:'word',q:'Лови цифры по порядку: 1, 2, 3, 4, 5',w:'12345',digits:true,speed:.9}]},
+{n:37,w:3, t:'Соседи числа', r:[c('Число 5 живёт между 4 и 6 — лови соседей!',['4','6'],['2','8','3','1'],6,{letters:true,speed:1,rate:880})]},
+{n:38,w:3, t:'Состав числа', r:[{k:'choice',q:'5 — это 2 и …?',opts:['3','4','1'],ans:'3'}]},
+{n:39,w:3, t:'Собери десяток', r:[c('Собери ровно 10 яблок — и остановись!',['🍎'],[],10,{exact:true,speed:1,rate:830})]},
+{n:40,w:3, t:'БОСС: Числовой дождь', r:[
+    {k:'catch',q:'4 + 2 = ?',good:['6'],bad:['5','7','4'],need:4,letters:true,speed:1.05,rate:850},
+    {k:'catch',q:'9 − 3 = ?',good:['6'],bad:['3','9','5'],need:4,letters:true,speed:1.1,rate:830},
+    {k:'word',q:'Лови цифры по порядку: 1, 2, 3, 4',w:'1234',digits:true,speed:1.15}]},
+/* ===== МИР 5. Лесная школа (41–50) ===== */
+{n:41,w:4, t:'Найди пару', r:[{k:'mem',q:'Найди одинаковые карточки',set:['🐶','🐱','🐭','🐰']}]},
+{n:42,w:4, t:'Пары посложнее', r:[{k:'mem',q:'Найди одинаковые карточки',set:['🐶','🐱','🐭','🐰','🦊','🐻']}]},
+{n:43,w:4, t:'Шесть пар', r:[{k:'mem',q:'Найди одинаковые карточки',set:['🐶','🐱','🐭','🐰','🦊','🐻','🐼','🐨']}]},
+{n:44,w:4, t:'Что лишнее?', r:[{k:'odd',q:'Что здесь лишнее?',items:['🍎','🍐','🍌','🚗'],ans:3}]},
+{n:45,w:4, t:'Лишнее по смыслу', r:[{k:'odd',q:'Кто здесь лишний?',items:['🐶','🐱','🐮','🌳'],ans:3}]},
+{n:46,w:4, t:'Узор АБ', r:[{k:'seq',q:'Продолжи узор',pattern:['🔴','🔵','🔴','🔵'],opts:['🔴','🔵','🟢'],ans:'🔴'}]},
+{n:47,w:4, t:'Узор ААБ', r:[{k:'seq',q:'Продолжи узор',pattern:['🟡','🟡','🔵','🟡','🟡','🔵'],opts:['🟡','🔵','🔴'],ans:'🟡'}]},
+{n:48,w:4, t:'Узор АБВ', r:[{k:'seq',q:'Продолжи узор',pattern:['🔺','🟩','🔵','🔺','🟩'],opts:['🔺','🟩','🔵'],ans:'🔵'}]},
+{n:49,w:4, t:'Запомни цифры', r:[{k:'mem',q:'Найди пары цифр',set:['1','2','3','4']}]},
+{n:50,w:4, t:'БОСС: Урок в школе', r:[
+    {k:'mem',q:'Найди пары',set:['🦉','🦊','🐻','🐰']},
+    {k:'odd',q:'Что лишнее?',items:['🖍️','📕','✏️','🍕'],ans:3},
+    {k:'seq',q:'Продолжи узор',pattern:['🟢','🟡','🟢','🟡'],opts:['🟢','🟡','🔴'],ans:'🟢'}]},
+/* ===== МИР 6. Морской порт (51–60) ===== */
+{n:51,w:5, t:'Фрукты и овощи', r:[{k:'sort',q:'Разложи по корзинкам',
+    bins:[{e:'🍎',match:['🍎','🍌','🍐','🍇']},{e:'🥕',match:['🥕','🥒','🍅','🥔']}],
+    items:['🍎','🍌','🥕','🍐','🥒','🍇','🍅','🥔'],need:8,rate:1900}]},
+{n:52,w:5, t:'Животные и растения', r:[{k:'sort',q:'Разложи по корзинкам',
+    bins:[{e:'🐶',match:['🐶','🐱','🐮','🐟']},{e:'🌳',match:['🌳','🌷','🍄','🌿']}],
+    items:['🐶','🌳','🐱','🌷','🐮','🍄','🐟','🌿'],need:8,rate:1850}]},
+{n:53,w:5, t:'Съедобное', r:[{k:'sort',q:'Что съедобно, а что нет?',
+    bins:[{e:'🍽️',match:['🍎','🍞','🍌','🧀']},{e:'🚫',match:['🪨','👟','🔑','🧦']}],
+    items:['🍎','🪨','🍞','👟','🍌','🔑','🧀','🧦'],need:8,rate:1850}]},
+{n:54,w:5, t:'Летает, плавает, ходит', r:[{k:'sort',q:'Кто летает, кто плавает, кто ходит?',
+    bins:[{e:'🕊️',match:['🕊️','🦋','🐝']},{e:'🐟',match:['🐟','🐬','🐳']},{e:'🐘',match:['🐘','🐎','🐄']}],
+    items:['🕊️','🐟','🐘','🦋','🐬','🐎','🐝','🐳','🐄'],need:8,rate:1950}]},
+{n:55,w:5, t:'Транспорт', r:[{k:'sort',q:'Едет, летит или плывёт?',
+    bins:[{e:'🚗',match:['🚗','🚌','🚲']},{e:'✈️',match:['✈️','🚁','🚀']},{e:'⛵',match:['⛵','🚢','🛶']}],
+    items:['🚗','✈️','⛵','🚌','🚁','🚢','🚲','🚀','🛶'],need:8,rate:1950}]},
+{n:56,w:5, t:'Эко-порядок', r:[{k:'sort',q:'Помоги разложить мусор',
+    bins:[{e:'📄',match:['📄','📰','📦']},{e:'♻️',match:['🥤','🧴','🛍️']},{e:'🍾',match:['🍾','🫙','🍶']}],
+    items:['📄','🥤','🍾','📰','🧴','🫙','📦','🛍️','🍶'],need:8,rate:2000}]},
+{n:57,w:5, t:'Времена года', r:[
+    {k:'choice',q:'Что бывает зимой?',opts:['❄️','🌷','🍂','☀️'],ans:'❄️'},
+    {k:'choice',q:'Что бывает летом?',opts:['❄️','🌷','🍂','☀️'],ans:'☀️'}]},
+{n:58,w:5, t:'Детёныши', r:[{k:'mem',q:'Найди пары: малыш и его мама',set:['🐶','🐱','🐤','🐮','🐴','🐑']}]},
+{n:59,w:5, t:'Кто где живёт', r:[
+    {k:'choice',q:'Кто живёт в норе?',opts:['🦊','🐝','🐟'],ans:'🦊'},
+    {k:'choice',q:'Кто живёт в улье?',opts:['🐝','🐢','🦉'],ans:'🐝'}]},
+{n:60,w:5, t:'БОСС: Порядок в порту', r:[
+    {k:'sort',q:'Разложи груз',bins:[{e:'🐟',match:['🐟','🐬']},{e:'🍎',match:['🍎','🍌']},{e:'🚗',match:['🚗','🚌']}],
+      items:['🐟','🍎','🚗','🐬','🍌','🚌'],need:6,rate:1700},
+    {k:'choice',q:'Что плывёт по морю?',opts:['🚢','🚗','✈️'],ans:'🚢'}]},
+/* ===== МИР 7. Космо-станция (61–70) ===== */
+{n:61,w:6, t:'Кометы', r:[c('Лови кометы, а планеты пусть летят мимо',['☄️'],['🪐','🌑','🌕'],8,{speed:1.05,rate:880})]},
+{n:62,w:6, t:'Что выше?', r:[{k:'choice',q:'Что летает выше всего?',opts:['✈️','🚀','🚁'],ans:'🚀'}]},
+{n:63,w:6, t:'Узор планет', r:[{k:'seq',q:'Продолжи узор',pattern:['🌍','🌕','🌍','🌕'],opts:['🌍','🌕','🌞'],ans:'🌍'}]},
+{n:64,w:6, t:'Созвездия', r:[{k:'mem',q:'Найди одинаковые созвездия',set:['⭐','🌟','✨','💫','☄️','🌠']}]},
+{n:65,w:6, t:'Узор АБВ в космосе', r:[{k:'seq',q:'Продолжи узор',pattern:['🚀','🌍','⭐','🚀','🌍'],opts:['🚀','🌍','⭐'],ans:'⭐'}]},
+{n:66,w:6, t:'Только звёзды', r:[c('Лови только звёзды',['⭐','🌟','✨'],['☄️','🌑','🪐'],10,{speed:1.2,rate:830})]},
+{n:67,w:6, t:'Большие планеты', r:[{k:'sort',q:'Большие планеты — в большую корзинку',
+    bins:[{e:'🪐',match:['🪐','🌍','🌞']},{e:'🌕',match:['🌕','🌑','💫']}],
+    items:['🪐','🌕','🌍','🌑','🌞','💫'],need:6,rate:1800}]},
+{n:68,w:6, t:'Космическое лишнее', r:[{k:'odd',q:'Что не летает в космосе?',items:['🚀','⭐','🌕','🐟'],ans:3}]},
+{n:69,w:6, t:'Метеоритный поток', r:[c('Лови только звёзды — красные метеориты опасны!',['⭐'],['🔴','☄️','🌑'],11,{speed:1.25,rate:780})]},
+{n:70,w:6, t:'БОСС: Пояс астероидов', r:[
+    c('Звёзды — в лукошко!',['⭐'],['☄️','🌑'],7,{speed:1.25,rate:760}),
+    {k:'seq',q:'Продолжи узор',pattern:['⭐','☄️','🌑','⭐','☄️'],opts:['⭐','☄️','🌑'],ans:'🌑'},
+    {k:'mem',q:'Найди пары',set:['🚀','🌍','⭐','🌕']}]},
+/* ===== МИР 8. Город Профессий (71–80) ===== */
+{n:71,w:7, t:'Инструменты', r:[{k:'sort',q:'Кому нужен этот предмет?',
+    bins:[{e:'👨‍🍳',match:['🍳','🥄','🍲']},{e:'👩‍⚕️',match:['💉','🩺','💊']},{e:'👷',match:['🔨','🪚','🧱']}],
+    items:['🍳','💉','🔨','🥄','🩺','🪚','🍲','💊','🧱'],need:8,rate:2000}]},
+{n:72,w:7, t:'Кому что нужно', r:[{k:'mem',q:'Найди пары: профессия и предмет',set:['👨‍🍳','👩‍⚕️','👷','👩‍🏫','🚒','🎨']}]},
+{n:73,w:7, t:'Кто что делает', r:[
+    {k:'choice',q:'Кто лечит людей?',opts:['👩‍⚕️','👨‍🍳','👷'],ans:'👩‍⚕️'},
+    {k:'choice',q:'Кто готовит обед?',opts:['👨‍🍳','🚒','👩‍🏫'],ans:'👨‍🍳'}]},
+{n:74,w:7, t:'Опасно!', r:[c('Лови игрушки, а горячее и острое не трогай',['🧸','🧊','🎈'],['🔥','☕','🔪'],10,{speed:1.15,rate:840})]},
+{n:75,w:7, t:'Светофор', r:[{k:'catch',q:'Лови зелёный свет — на красный нельзя!',good:['🟢'],bad:['🔴','🟡'],need:6,letters:false,speed:1.1,rate:800}]},
+{n:76,w:7, t:'Пять монет', r:[c('Собери ровно 5 монеток',['🪙'],[],5,{exact:true,speed:1,rate:880})]},
+{n:77,w:7, t:'Гигиена', r:[{k:'sort',q:'Для зубов или для волос?',
+    bins:[{e:'🦷',match:['🪥','🧴', '🧼']},{e:'💇',match:['💈','✂️','🪮']}],
+    items:['🪥','💈','🧴','✂️','🧼','🪮'],need:6,rate:1800}]},
+{n:78,w:7, t:'Эмоции', r:[
+    {k:'choice',q:'Кто грустит?',opts:['😀','😢','😡'],ans:'😢'},
+    {k:'choice',q:'Кто сердится?',opts:['😀','😢','😡'],ans:'😡'}]},
+{n:79,w:7, t:'Противоположности', r:[{k:'mem',q:'Найди пары-противоположности',set:['🔥','🧊','🌞','🌙','⬆️','⬇️']}]},
+{n:80,w:7, t:'БОСС: Рабочий день', r:[
+    {k:'sort',q:'Разложи инструменты',bins:[{e:'👨‍🍳',match:['🍳','🥄']},{e:'👩‍⚕️',match:['💉','🩺']}],
+     items:['🍳','💉','🥄','🩺'],need:4,rate:1700},
+    {k:'choice',q:'На какой свет идём?',opts:['🔴','🟢','🟡'],ans:'🟢'},
+    c('Собери яблоки',['🍎'],['🔥','🔪'],6,{speed:1.2,rate:820})]},
+/* ===== МИР 9. Музыкальный замок (81–90) ===== */
+{n:81,w:8, t:'Ноты', r:[c('Лови ноты — тишину пропускай',['🎵','🎶','🎼'],['🔇','💤'],9,{speed:1,rate:870})]},
+{n:82,w:8, t:'Ритм', r:[{k:'seq',q:'Продолжи ритм',pattern:['🥁','👏','🥁','👏'],opts:['🥁','👏','🎺'],ans:'🥁'}]},
+{n:83,w:8, t:'Слово НОТА', r:[{k:'word',q:'Собери слово НОТА',w:'НОТА'}]},
+{n:84,w:8, t:'Инструменты', r:[{k:'mem',q:'Найди пары инструментов',set:['🎸','🎺','🥁','🎻','🎷','🎹']}]},
+{n:85,w:8, t:'Семейства', r:[{k:'sort',q:'Струнные, духовые или ударные?',
+    bins:[{e:'🎸',match:['🎸','🎻','🪕']},{e:'🎺',match:['🎺','🎷','🎶']},{e:'🥁',match:['🥁','🪘','🔔']}],
+    items:['🎸','🎺','🥁','🎻','🎷','🪘','🪕','🔔','🎶'],need:8,rate:1950}]},
+{n:86,w:8, t:'Кто говорит мяу?', r:[
+    {k:'choice',q:'Кто говорит «мяу»?',opts:['🐶','🐱','🐮'],ans:'🐱'},
+    {k:'choice',q:'Кто говорит «му»?',opts:['🐶','🐱','🐮'],ans:'🐮'}]},
+{n:87,w:8, t:'Повтори ритм', r:[{k:'seq',q:'Продолжи ритм',pattern:['🎵','🎵','🥁','🎵','🎵'],opts:['🎵','🥁','🎺'],ans:'🥁'}]},
+{n:88,w:8, t:'Высокие ноты', r:[{k:'choice',q:'Какая нота выше?',opts:['🎶','🎵'],ans:'🎶'}]},
+{n:89,w:8, t:'Тихая полянка', r:[c('Отдохни: лови бабочек не спеша',['🦋','🌸','🌟'],[],12,{speed:.55,rate:1300,say:'Можно отдохнуть. Лови бабочек не спеша.'})]},
+{n:90,w:8, t:'БОСС: Большой концерт', r:[
+    c('Лови ноты!',['🎵','🎶'],['🔇'],8,{speed:1.25,rate:800}),
+    {k:'seq',q:'Продолжи ритм',pattern:['🥁','🥁','🎺','🥁','🥁'],opts:['🥁','🎺','🎻'],ans:'🎺'},
+    {k:'mem',q:'Найди пары',set:['🎸','🥁','🎺','🎹']}]},
+/* ===== МИР 10. Звёздная башня (91–100) ===== */
+{n:91,w:9, t:'Звёздный сбор', r:[c('Лови звёзды, метеориты пропускай',['⭐','🌟'],['☄️','🌑'],14,{speed:1.15,rate:790})]},
+{n:92,w:9, t:'Слово ЗВЕЗДА', r:[{k:'word',q:'Собери слово ЗВЕЗДА',w:'ЗВЕЗДА',speed:1.1}]},
+{n:93,w:9, t:'Быстрая сортировка', r:[{k:'sort',q:'Разложи всё по местам',bins:[{e:'⭐',match:['⭐','🌟']},{e:'🌑',match:['🌑','🪐']},{e:'🚀',match:['🚀','🛸']}],
+    items:['⭐','🌑','🚀','🌟','🪐','🛸'],need:6,rate:1500}]},
+{n:94,w:9, t:'Восемь пар', r:[{k:'mem',q:'Найди все пары',set:['⭐','🌟','🌙','🌞','☄️','🚀','🪐','🌍']}]},
+{n:95,w:9, t:'Звёздный узор', r:[{k:'seq',q:'Продолжи узор',pattern:['⭐','🌙','🌞','⭐','🌙'],opts:['⭐','🌙','🌞'],ans:'🌞'}]},
+{n:96,w:9, t:'Порядок до шести', r:[{k:'word',q:'Лови цифры по порядку: 1…6',w:'123456',digits:true,speed:1.1}]},
+{n:97,w:9, t:'Два правила', r:[c('Лови только звёзды, но не солнца!',['⭐'],['🌞','☄️','🌑'],12,{speed:1.2,rate:770})]},
+{n:98,w:9, t:'Смесь', r:[
+    {k:'odd',q:'Что лишнее на небе?',items:['⭐','🌙','☄️','🐟'],ans:3},
+    {k:'seq',q:'Продолжи узор',pattern:['🌙','⭐','⭐','🌙','⭐'],opts:['🌙','⭐','☄️'],ans:'⭐'},
+    c('И звёзды в лукошко!',['⭐'],['☄️'],8,{speed:1.3,rate:800})]},
+{n:99,w:9, t:'Башня скорости', r:[c('Успей поймать звёзды!',['⭐','✨'],['☄️','🌑','🌞'],14,{speed:1.35,rate:740})]},
+{n:100,w:9,t:'ФИНАЛ: Праздник Лукошка', r:[
+    c('Поймай звёзды!',['⭐','🌟'],['☄️'],10,{speed:1.2,rate:800}),
+    {k:'word',q:'Собери слово ПОБЕДА',w:'ПОБЕДА',speed:1.15},
+    {k:'seq',q:'Продолжи узор',pattern:['🔴','🟡','🟢','🔴','🟡'],opts:['🔴','🟡','🟢'],ans:'🟢'},
+    {k:'choice',q:'Ты дошёл до конца! Сколько звёзд на небе?',visual:'⭐⭐⭐',opts:['2','3','4'],ans:'3'}]},
+];
+
+/* ---------- 3. ЗВАНИЯ ---------- */
+const RANKS = [
+  {s:0,  n:'Почемучка',            e:'🐣'},
+  {s:3,  n:'Ловкие Лапки',         e:'🐾'},
+  {s:10, n:'Яблочный Дружок',      e:'🍎'},
+  {s:25, n:'Мастер Лукошка',       e:'🧺'},
+  {s:46, n:'Знаток Букв',          e:'🔤'},
+  {s:71, n:'Счётный Профи',        e:'🔢'},
+  {s:101,n:'Лесной Умник',         e:'🦉'},
+  {s:136,n:'Капитан Сортировки',   e:'⚓'},
+  {s:166,n:'Космо-Следопыт',       e:'🚀'},
+  {s:201,n:'Мастер Профессий',     e:'🛠️'},
+  {s:236,n:'Музыкальная Звезда',   e:'🎵'},
+  {s:266,n:'Хранитель Радуги',     e:'🌈'},
+  {s:291,n:'Легенда Лукошка',      e:'👑'},
+];
+const MAX_STARS = LEVELS.length*3;
+
+/* ---------- 4. СОХРАНЕНИЕ ---------- */
+const SAVE_KEY = 'lukoshko_v1';
+let save = {levels:{}, sound:true};
+try{ const s = JSON.parse(localStorage.getItem(SAVE_KEY)); if(s && s.levels) save = Object.assign(save,s); }catch(e){}
+function persist(){ try{ localStorage.setItem(SAVE_KEY, JSON.stringify(save)); }catch(e){} }
+function totalStars(){ let t=0; for(const k in save.levels) t += save.levels[k].stars||0; return t; }
+function rankFor(stars){ let r=RANKS[0]; for(const x of RANKS) if(stars>=x.s) r=x; return r; }
+function nextRank(stars){ for(const x of RANKS) if(stars<x.s) return x; return null; }
+
+/* ---------- 5. ЗВУК ---------- */
+let actx=null;
+function audio(){ if(!actx){ try{ actx=new (window.AudioContext||window.webkitAudioContext)(); }catch(e){} } return actx; }
+function tone(freq,dur=0.13,type='sine',vol=0.15,delay=0){
+  if(!save.sound) return; const a=audio(); if(!a) return;
+  const t0=a.currentTime+delay;
+  const o=a.createOscillator(), g=a.createGain();
+  o.type=type; o.frequency.setValueAtTime(freq,t0);
+  g.gain.setValueAtTime(0.0001,t0);
+  g.gain.exponentialRampToValueAtTime(vol,t0+0.02);
+  g.gain.exponentialRampToValueAtTime(0.0001,t0+dur);
+  o.connect(g); g.connect(a.destination); o.start(t0); o.stop(t0+dur+0.05);
+}
+const sfxCatch = ()=> tone(620+Math.random()*180,0.1,'triangle',0.16);
+const sfxWrong = ()=>{ tone(200,0.16,'sawtooth',0.12); tone(150,0.2,'sawtooth',0.1,0.08); };
+const sfxWin   = ()=>{ [523,659,784,1047].forEach((f,i)=>tone(f,0.22,'sine',0.16,i*0.12)); };
+const sfxStar  = (i)=> tone(700+i*220,0.18,'triangle',0.18);
+const sfxCard  = ()=> tone(520,0.07,'sine',0.12);
+
+function speak(text){
+  if(!save.sound || !('speechSynthesis' in window)) return;
+  try{
+    speechSynthesis.cancel();
+    const u=new SpeechSynthesisUtterance(text);
+    u.lang='ru-RU'; u.rate=0.95; u.pitch=1.15; u.volume=1;
+    speechSynthesis.speak(u);
+  }catch(e){}
+}
+
+/* ---------- 6. КАНВАС ---------- */
+const cvs=document.getElementById('c');
+const ctx=cvs.getContext('2d');
+let Wd=800,Hd=600,DPR=1;
+function resize(){
+  DPR=Math.min(2,window.devicePixelRatio||1);
+  Wd=cvs.clientWidth||window.innerWidth; Hd=cvs.clientHeight||window.innerHeight;
+  cvs.width=Math.round(Wd*DPR); cvs.height=Math.round(Hd*DPR);
+  ctx.setTransform(DPR,0,0,DPR,0,0);
+}
+window.addEventListener('resize',resize);
+
+const EMOJI_FONT='"Segoe UI Emoji","Apple Color Emoji","Noto Color Emoji","EmojiOne Color",sans-serif';
+function emoji(txt,size){ ctx.font=size+'px '+EMOJI_FONT; return txt; }
+const rnd=(a,b)=>a+Math.random()*(b-a);
+const pick=a=>a[Math.floor(Math.random()*a.length)];
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+
+/* ---------- 7. СОСТОЯНИЕ ИГРЫ ---------- */
+const UI={promptBottom:130};
+const G={
+  screen:'menu',           // menu | map | play | result
+  level:null, ri:0,        // текущий уровень и индекс раунда
+  score:0, errs:0, combo:0, hearts:5,
+  pointerX:0, pointerOn:false,
+  catcher:{x:0,tx:0,y:0,w:130},
+  rate:1,
+  particles:[],
+  timeAcc:0,
+};
+let R=null; // состояние раунда
+
+/* ---------- 8. РАУНДЫ ---------- */
+function startLevel(n){
+  const lv = LEVELS.find(x=>x.n===n) || LEVELS[0];
+  G.level=lv; G.ri=0; G.score=0; G.errs=0; G.combo=0; G.hearts=5;
+  G.catcher.x = Wd/2; G.catcher.tx = Wd/2;
+  G.catcher.y = Hd-90;
+  G.screen='play';
+  showScreen(null);
+  document.getElementById('hud').classList.remove('hidden');
+  document.getElementById('prompt').classList.remove('hidden');
+  document.getElementById('lvPill').textContent = 'Ур. '+lv.n;
+  startRound(0);
+}
+
+function startRound(i){
+  G.ri=i;
+  const spec = G.level.r[i];
+  R = {spec:k2(spec), items:[], t:0, spawnT:0, done:0, idx:0, drag:null, need:0,
+       cards:[], flipped:[], matched:0, locked:false, answered:false, cele:0, sel:[]};
+  document.getElementById('barFill').style.width='0%';
+  setPrompt(spec.q, false);
+  speak(spec.q);
+
+  R.spawnT = (spec.rate||900)*0.45;   // первый предмет — почти сразу
+  if(spec.k==='catch'){
+    R.need = spec.need||8;
+    if(spec.unique){ R.got=new Set(); }
+  }
+  if(spec.k==='word'){
+    R.need = spec.w.length;
+    R.word = spec.w;
+    R.pool = spec.digits ? '0123456789' : 'АБВГДЕЖЗИЙКЛМНОПРСТУФХЦЧШЫЭЮЯ';
+  }
+  if(spec.k==='sort'){
+    R.need = spec.need||6;
+  }
+  if(spec.k==='mem'){
+    const set = spec.set.slice();
+    const deck = set.concat(set).map(e=>({e, open:false, done:false}));
+    for(let i=deck.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[deck[i],deck[j]]=[deck[j],deck[i]];}
+    R.cards=deck; R.need=set.length;
+  }
+  updateHUD();
+}
+function k2(s){ return JSON.parse(JSON.stringify(s)); }
+
+function setPrompt(t, low){
+  document.getElementById('promptBox').textContent=t;
+  document.getElementById('prompt').classList.toggle('low', !!low);
+  requestAnimationFrame(()=>{
+    const b=document.getElementById('prompt').getBoundingClientRect();
+    UI.promptBottom = b.bottom;
+  });
+}
+
+function updateHUD(){
+  document.getElementById('scorePill').textContent = G.score;
+  const narrow = window.innerWidth < 680;
+  const h = narrow
+    ? '❤️ '+Math.max(0,G.hearts)
+    : '❤️'.repeat(Math.max(0,G.hearts)) + '🖤'.repeat(Math.max(0,5-G.hearts));
+  document.getElementById('hearts').textContent = h;
+  const pct = R && R.need ? Math.min(100, Math.round((R.done/R.need)*100)) : 0;
+  document.getElementById('barFill').style.width = pct+'%';
+}
+
+/* ---- помощь: правильное/неправильное ---- */
+function goodAction(word){
+  G.combo++;
+  const mult = 1 + Math.min(4, Math.floor(G.combo/3))*0.5;
+  G.score += Math.round(10*mult);
+  R.done++;
+  sfxCatch();
+  burst(G.catcher.x, G.catcher.y-40, ['⭐','✨','💛'], 5);
+  if(R.done>=R.need) finishRound();
+  updateHUD();
+}
+function badAction(){
+  G.errs++; G.combo=0; G.hearts--;
+  sfxWrong();
+  if(navigator.vibrate) navigator.vibrate(60);
+  updateHUD();
+  if(G.hearts<=0) finishLevel(false);
+}
+
+function finishRound(){
+  R.locked=true;
+  setPrompt('Отлично! 🎉', false);
+  burst(Wd/2, Hd/2, ['⭐','🎉','✨','🌟'], 22);
+  tone(880,0.15,'sine',0.16);
+  setTimeout(()=>{
+    if(G.ri+1 < G.level.r.length){ startRound(G.ri+1); }
+    else finishLevel(true);
+  }, 900);
+}
+
+function finishLevel(passed){
+  const stars = G.errs<=1?3 : G.errs<=4?2 : 1;
+  const best = save.levels[G.level.n];
+  const prevStars = best?best.stars:0;
+  if(!best || stars>best.stars || G.score>(best.best||0)){
+    save.levels[G.level.n] = {stars:Math.max(stars, prevStars), best:Math.max(G.score, best?best.best||0:0)};
+    persist();
+  }
+  G.screen='result';
+  document.getElementById('hud').classList.add('hidden');
+  document.getElementById('prompt').classList.add('hidden');
+  sfxWin();
+  showResult(stars, passed);
+}
+
+/* ---------- 9. ЧАСТИЦЫ ---------- */
+function burst(x,y,emojis,n){
+  for(let i=0;i<n;i++){
+    G.particles.push({x,y,vx:rnd(-170,170),vy:rnd(-260,-60),g:520,life:1,
+      e:pick(emojis), size:rnd(18,34), rot:rnd(-1,1)});
+  }
+}
+function updateParticles(dt){
+  for(const p of G.particles){
+    p.vy += p.g*dt; p.x += p.vx*dt; p.y += p.vy*dt; p.life -= dt*0.9; p.rot += dt*2;
+  }
+  G.particles = G.particles.filter(p=>p.life>0);
+}
+
+/* ---------- 10. ОБНОВЛЕНИЕ ---------- */
+function update(dt){
+  updateParticles(dt);
+  if(G.screen!=='play' || !R) return;
+
+  // лукошко следует за мышкой
+  const cG=G.catcher;
+  cG.y = Hd-92;
+  cG.x += (cG.tx-cG.x)*Math.min(1, dt*12);
+
+  const sp = R.spec;
+
+  if(sp.k==='catch'||sp.k==='word'){
+    const speed = sp.speed||1;
+    const interval = (sp.rate||900)/speed;
+    R.spawnT += dt*1000;
+    if(!R.locked && R.spawnT>interval){ R.spawnT=0; spawnItem(); }
+    // движение
+    for(const it of R.items){
+      it.y += it.vy*dt;
+      it.x += (it.vx||0)*dt;
+      it.rot += (it.vr||0)*dt;
+      if(it.x<30||it.x>Wd-30) it.vx = -(it.vx||0);
+    }
+    // ловля
+    const top = cG.y-46;
+    for(const it of R.items){
+      if(it.dead) continue;
+      if(it.y>top-20 && it.y<top+62 && Math.abs(it.x-cG.x)<78){
+        it.dead=true;
+        handleCatch(it);
+      } else if(it.y>Hd+50){ it.dead=true; /* пропущено */ }
+    }
+    R.items = R.items.filter(i=>!i.dead);
+  }
+
+  if(sp.k==='sort'){
+    const interval = (sp.rate||1800)/1;
+    R.spawnT += dt*1000;
+    if(!R.locked && R.spawnT>interval && R.items.length<4){ R.spawnT=0; spawnSortItem(); }
+    for(const it of R.items){
+      if(it.drag) continue;
+      it.y += it.vy*dt;
+      if(it.y > Hd-150){ it.dead=true; badAction(); toast('Упало! 🙈'); }
+    }
+    R.items = R.items.filter(i=>!i.dead);
+  }
+
+  // карточки: анимация открытия ничего не требует
+  updateHUD();
+}
+
+function toast(txt){
+  const el=document.getElementById('toast');
+  el.textContent=txt; el.classList.add('show');
+  clearTimeout(el._t); el._t=setTimeout(()=>el.classList.remove('show'),700);
+}
+
+/* ---- спавн: ловля ---- */
+function spawnItem(){
+  const sp=R.spec;
+  let emojiCh, letter=null, isGood;
+  if(sp.k==='word'){
+    // 55% — нужная буква, иначе случайная
+    const needCh = R.word[R.idx];
+    if(Math.random()<0.68){ letter=needCh; isGood=true; }
+    else { letter=pick(R.pool.split('').filter(ch=>ch!==needCh)); isGood=false; }
+  } else if(sp.letters){
+    isGood = Math.random()<0.55;
+    const src = isGood? sp.good : (sp.bad&&sp.bad.length? sp.bad : sp.good);
+    letter = pick(src);
+  } else {
+    isGood = (sp.bad&&sp.bad.length) ? Math.random()<0.6 : true;
+    emojiCh = isGood ? pick(sp.good) : pick(sp.bad);
+  }
+
+  let size = 58;
+  if(sp.sizeRule){ // правило «только большие»
+    if(isGood) size = 74; else size = 40;
+  }
+  const x = rnd(70, Wd-70);
+  const speed = (sp.speed||1);
+  const fall = Math.min(640, (300 + Math.random()*70) * speed * (Hd/700));
+  R.items.push({
+    x, y:-50,
+    vy: fall,
+    vx: (sp.wobble? rnd(-40,40): 0),
+    emoji: emojiCh, letter,
+    good: isGood,
+    size, rot: rnd(-0.2,0.2), vr: rnd(-0.6,0.6),
+    color: isGood? '#7be36a' : '#8ecbff',
+  });
+}
+
+function spawnSortItem(){
+  const sp=R.spec;
+  const e = pick(sp.items);
+  R.items.push({x:rnd(90,Wd-90), y:-50, vy:70, emoji:e, size:64, drag:null});
+}
+
+/* ---- обработка ловли ---- */
+function handleCatch(it){
+  const sp=R.spec;
+  if(sp.k==='word'){
+    if(it.letter === R.word[R.idx]){
+      R.idx++; G.combo++; G.score += 10 + R.idx*2; R.done=R.idx;
+      sfxCatch(); burst(it.x, it.y, ['✨','⭐'], 4);
+      if(R.idx>=R.word.length) finishRound();
+    } else {
+      badAction();
+    }
+    updateHUD(); return;
+  }
+  if(sp.unique){
+    if(it.good){
+      if(R.got.has(it.emoji)){ /* повтор — нейтрально */ }
+      else { R.got.add(it.emoji); goodAction(); }
+    } else badAction();
+    return;
+  }
+  if(sp.exact){
+    if(it.good){
+      if(R.done < R.need){ goodAction(); }
+      else badAction(); // лишнее
+    } else badAction();
+    return;
+  }
+  if(it.good) goodAction(); else badAction();
+}
+
+/* ============================================================
+   11. РИСОВАНИЕ
+   ============================================================ */
+function drawBackground(){
+  const w = G.level? WORLDS[G.level.w] : WORLDS[0];
+  const g = ctx.createLinearGradient(0,0,0,Hd);
+  g.addColorStop(0,w.sky[0]); g.addColorStop(1,w.sky[1]);
+  ctx.fillStyle=g; ctx.fillRect(0,0,Wd,Hd);
+
+  // облака/звёзды
+  const t=performance.now()/1000;
+  const dark = G.level && (G.level.w===6||G.level.w===9);
+  ctx.save();
+  if(dark){
+    for(let i=0;i<40;i++){
+      const x=((i*137.5)%Wd), y=((i*89.3)%(Hd*0.8))+20;
+      const a=0.35+0.35*Math.sin(t*2+i);
+      ctx.globalAlpha=a; ctx.fillStyle='#fff';
+      ctx.beginPath(); ctx.arc(x,y,(i%3)+1.2,0,7); ctx.fill();
+    }
+  } else {
+    ctx.globalAlpha=0.75; ctx.fillStyle='#fff';
+    for(let i=0;i<6;i++){
+      const x=((i*263 + t*12)%(Wd+300))-150, y=60+((i*97)%(Hd*0.45));
+      ctx.beginPath();
+      ctx.arc(x,y,44,0,7); ctx.arc(x+42,y+8,32,0,7); ctx.arc(x-40,y+10,28,0,7);
+      ctx.fill();
+    }
+  }
+  ctx.restore();
+
+  // земля
+  const gy = Hd-58;
+  ctx.fillStyle = dark? 'rgba(255,255,255,.10)':'rgba(120,200,120,.35)';
+  ctx.beginPath(); ctx.moveTo(0,gy+20);
+  ctx.quadraticCurveTo(Wd*0.5, gy-18, Wd, gy+20);
+  ctx.lineTo(Wd,Hd); ctx.lineTo(0,Hd); ctx.closePath(); ctx.fill();
+}
+
+function drawItem(it){
+  ctx.save();
+  ctx.translate(it.x, it.y);
+  ctx.rotate(it.rot*0.35);
+  const r = it.size*0.62;
+  if(it.letter){
+    ctx.beginPath();
+    ctx.arc(0,0,r,0,7);
+    const grd=ctx.createLinearGradient(0,-r,0,r);
+    grd.addColorStop(0, it.color);
+    grd.addColorStop(1, it.good? '#3fb43b' : '#4a9de0');
+    ctx.fillStyle=grd; ctx.fill();
+    ctx.lineWidth=4; ctx.strokeStyle='#fff'; ctx.stroke();
+    ctx.fillStyle='#22324a';
+    ctx.font='bold '+Math.round(it.size*0.75)+'px "Nunito",system-ui,sans-serif';
+    ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.fillText(it.letter,0,2);
+  } else {
+    // светлый диск-подложка (чтобы объект был виден на любом фоне)
+    ctx.beginPath(); ctx.arc(0,0,r*0.95,0,7);
+    ctx.fillStyle='rgba(255,255,255,.55)'; ctx.fill();
+    ctx.font=it.size+'px '+EMOJI_FONT;
+    ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.fillText(it.emoji,0,2);
+  }
+  ctx.restore();
+}
+
+function drawCatcher(){
+  const cG=G.catcher;
+  ctx.save();
+  ctx.translate(cG.x,cG.y);
+  // тень
+  ctx.beginPath(); ctx.ellipse(0,52,58,13,0,0,7); ctx.fillStyle='rgba(0,0,0,.18)'; ctx.fill();
+  // корзинка
+  ctx.beginPath();
+  ctx.moveTo(-58,0); ctx.lineTo(58,0); ctx.lineTo(42,48); ctx.lineTo(-42,48); ctx.closePath();
+  const g=ctx.createLinearGradient(0,0,0,50);
+  g.addColorStop(0,'#e2a35c'); g.addColorStop(1,'#b97b35');
+  ctx.fillStyle=g; ctx.fill();
+  ctx.lineWidth=4; ctx.strokeStyle='#8a5a22'; ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(-46,16); ctx.lineTo(46,16); ctx.stroke();
+  // ёжик сверху
+  ctx.font='62px '+EMOJI_FONT; ctx.textAlign='center'; ctx.textBaseline='middle';
+  ctx.fillText('🦔',0,-22);
+  ctx.restore();
+}
+
+function drawRound(){
+  if(!R) return;
+  const sp=R.spec;
+
+  if(sp.k==='catch'||sp.k==='word'||sp.k==='sort'){
+    for(const it of R.items) drawItem(it);
+  }
+
+  if(sp.k==='word'){
+    // слоты слова
+    const n=R.word.length, gap=Math.min(58, (Wd-70)/n);
+    const y=Math.min(Hd*0.42, Math.max(96, UI.promptBottom+40));
+    const startX = Wd/2-(n-1)*gap/2;
+    for(let i=0;i<n;i++){
+      const x=startX+i*gap;
+      const done = i<R.idx;
+      const next = i===R.idx;
+      ctx.save();
+      ctx.translate(x,y);
+      ctx.beginPath(); ctx.roundRect(-gap*0.4,-28,gap*0.8,56,14);
+      ctx.fillStyle = done? 'rgba(120,220,120,.95)' : next? 'rgba(255,230,120,.95)':'rgba(255,255,255,.75)';
+      ctx.fill(); ctx.lineWidth=3; ctx.strokeStyle='rgba(90,110,160,.35)'; ctx.stroke();
+      ctx.fillStyle= done?'#fff':'#4a3a6a';
+      ctx.font='bold 26px "Nunito",system-ui,sans-serif'; ctx.textAlign='center'; ctx.textBaseline='middle';
+      ctx.fillText(done? R.word[i] : '', 0, 2);
+      ctx.restore();
+    }
+  }
+
+  if(sp.k==='catch'||sp.k==='word') drawCatcher();
+
+  if(sp.k==='sort') drawSortBins();
+  if(sp.k==='mem') drawCards();
+  if(sp.k==='odd'||sp.k==='seq'||sp.k==='choice') drawQuiz();
+}
+
+function drawSortBins(){
+  const bins=R.spec.bins;
+  const n=bins.length;
+  const bw=Math.min(190,(Wd-60)/n-16);
+  const total=n*bw+(n-1)*16;
+  const y=Hd-150;
+  for(let i=0;i<n;i++){
+    const x=Wd/2-total/2+i*(bw+16);
+    ctx.save();
+    ctx.beginPath(); ctx.roundRect(x,y,bw,120,20);
+    const g=ctx.createLinearGradient(0,y,0,y+120);
+    g.addColorStop(0,'#ffffff'); g.addColorStop(1,'#e9f2ff');
+    ctx.fillStyle=g; ctx.fill(); ctx.lineWidth=5; ctx.strokeStyle='rgba(110,140,190,.5)'; ctx.stroke();
+    ctx.font='52px '+EMOJI_FONT; ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.fillText(bins[i].e, x+bw/2, y+58);
+    ctx.restore();
+    bins[i]._rect={x,y,w:bw,h:120};
+  }
+}
+
+function drawCards(){
+  const cards=R.cards, n=cards.length;
+  const cols = n<=4?2 : n<=9?3 : 4;
+  const rows = Math.ceil(n/cols);
+  const top = Math.max(120, UI.promptBottom+26);
+  const maxW = Math.min(Wd-32, 700), maxH = Math.max(200, Hd-top-40);
+  const cw = Math.min(140, (maxW-(cols-1)*12)/cols);
+  const ch = Math.max(64, Math.min(140, cw*1.12, (maxH-(rows-1)*12)/rows));
+  const totalW = cols*cw+(cols-1)*12, totalH = rows*ch+(rows-1)*12;
+  const x0 = Wd/2-totalW/2, y0 = top + Math.max(0,(maxH-totalH)/2);
+  R._cardRects=[];
+  for(let i=0;i<n;i++){
+    const cx = x0 + (i%cols)*(cw+12);
+    const cy = y0 + Math.floor(i/cols)*(ch+12);
+    R._cardRects.push({x:cx,y:cy,w:cw,h:ch});
+    const cd=cards[i];
+    ctx.save();
+    ctx.beginPath(); ctx.roundRect(cx,cy,cw,ch,18);
+    if(cd.open||cd.done){
+      ctx.fillStyle = cd.done? 'rgba(140,235,140,.95)':'#fff';
+    } else {
+      const g=ctx.createLinearGradient(cx,cy,cx,cy+ch);
+      g.addColorStop(0,'#8ecbff'); g.addColorStop(1,'#4a9de0'); ctx.fillStyle=g;
+    }
+    ctx.fill(); ctx.lineWidth=4; ctx.strokeStyle='rgba(255,255,255,.9)'; ctx.stroke();
+    ctx.font=Math.round(Math.min(cw,ch)*0.55)+'px '+EMOJI_FONT;
+    ctx.textAlign='center'; ctx.textBaseline='middle';
+    if(cd.open||cd.done) ctx.fillText(cd.e, cx+cw/2, cy+ch/2);
+    else { ctx.font=Math.round(Math.min(cw,ch)*0.38)+'px '+EMOJI_FONT; ctx.fillText('❓', cx+cw/2, cy+ch/2); }
+    ctx.restore();
+  }
+}
+
+function drawQuiz(){
+  const sp=R.spec;
+  let opts=[], q=sp.q;
+  ctx.save();
+  ctx.textAlign='center';
+  if(sp.k==='seq'){
+    const pat=sp.pattern, n=pat.length;
+    const size=Math.min(58,(Wd-120)/n);
+    const total=n*size+(n-1)*8 + size;
+    let x=Wd/2-total/2;
+    const y=Hd*0.36;
+    for(let i=0;i<n;i++){
+      ctx.font=size+'px '+EMOJI_FONT; ctx.textBaseline='middle';
+      ctx.fillText(pat[i], x+size/2, y);
+      x+=size+8;
+    }
+    ctx.font=size+'px '+EMOJI_FONT;
+    ctx.globalAlpha=.5; ctx.fillText('❓', x+size/2, y); ctx.globalAlpha=1;
+    opts=sp.opts;
+  } else if(sp.k==='odd'){
+    const items=sp.items, n=items.length;
+    const size=Math.min(92,(Wd-100)/n);
+    const total=n*size+(n-1)*14;
+    R._optRects=[];
+    for(let i=0;i<n;i++){
+      const bx=Wd/2-total/2+i*(size+14), by=Hd*0.30, b=size*1.15;
+      ctx.beginPath(); ctx.roundRect(bx,by,b,b,22);
+      ctx.fillStyle='#fff'; ctx.fill();
+      ctx.lineWidth=4; ctx.strokeStyle='rgba(110,140,190,.4)'; ctx.stroke();
+      ctx.font=(size*0.8)+'px '+EMOJI_FONT; ctx.textBaseline='middle'; ctx.textAlign='center';
+      ctx.fillText(items[i], bx+b/2, by+b/2);
+      R._optRects.push({x:bx,y:by,w:b,h:b,v:items[i]});
+    }
+    opts=null;
+  } else if(sp.k==='choice'){
+    if(sp.visual){
+      ctx.font='min(74px, 12vw)'; ctx.font=Math.min(74,Wd*0.13)+'px '+EMOJI_FONT;
+      ctx.textBaseline='middle'; ctx.fillText(sp.visual, Wd/2, Hd*0.30);
+    }
+    opts=sp.opts;
+  }
+  ctx.restore();
+
+  if(opts){
+    const n=opts.length;
+    const bw=Math.min(170,(Wd-60)/n-14), bh=Math.min(150,bw);
+    const total=n*bw+(n-1)*14;
+    R._optRects=[];
+    for(let i=0;i<n;i++){
+      const bx=Wd/2-total/2+i*(bw+14), by=Hd*0.52;
+      ctx.save();
+      ctx.beginPath(); ctx.roundRect(bx,by,bw,bh,22);
+      const g=ctx.createLinearGradient(0,by,0,by+bh);
+      g.addColorStop(0,'#ffffff'); g.addColorStop(1,'#eaf4ff');
+      ctx.fillStyle=g; ctx.fill(); ctx.lineWidth=5; ctx.strokeStyle='rgba(110,140,190,.5)'; ctx.stroke();
+      ctx.font=(bh*0.5)+'px '+EMOJI_FONT; ctx.textAlign='center'; ctx.textBaseline='middle';
+      const label=opts[i].length>2? opts[i] : opts[i];
+      ctx.fillText(label, bx+bw/2, by+bh/2);
+      ctx.restore();
+      R._optRects.push({x:bx,y:by,w:bw,h:bh,v:opts[i]});
+    }
+  }
+}
+
+function drawParticles(){
+  for(const p of G.particles){
+    ctx.save(); ctx.globalAlpha=Math.max(0,p.life);
+    ctx.translate(p.x,p.y); ctx.rotate(p.rot);
+    ctx.font=p.size+'px '+EMOJI_FONT; ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.fillText(p.e,0,0); ctx.restore();
+  }
+}
+
+function render(){
+  drawBackground();
+  if(G.screen==='play'){ drawRound(); }
+  drawParticles();
+}
+
+/* ---------- 12. ЦИКЛ ---------- */
+let last=performance.now();
+function loop(now){
+  const dt=Math.min(0.05,(now-last)/1000); last=now;
+  update(dt);
+  render();
+  requestAnimationFrame(loop);
+}
+
+/* ============================================================
+   13. ВВОД
+   ============================================================ */
+function pos(e){
+  const r=cvs.getBoundingClientRect();
+  return {x:e.clientX-r.left, y:e.clientY-r.top};
+}
+cvs.addEventListener('pointerdown', e=>{
+  if(G.screen!=='play'||!R) return;
+  const p=pos(e); audio();
+  const sp=R.spec;
+
+  if(sp.k==='sort'){
+    // взять предмет
+    let bestI=-1,bestD=1e9;
+    R.items.forEach((it,i)=>{
+      const d=Math.hypot(it.x-p.x,it.y-p.y);
+      if(d<70 && d<bestD){bestD=d;bestI=i;}
+    });
+    if(bestI>=0){ R.items[bestI].drag={dx:R.items[bestI].x-p.x, dy:R.items[bestI].y-p.y}; }
+    return;
+  }
+  if(sp.k==='mem'){ handleCardClick(p); return; }
+  if(sp.k==='odd'||sp.k==='seq'||sp.k==='choice'){ handleQuizClick(p); return; }
+
+  G.catcher.tx = p.x; G.pointerOn=true; G.pointerX=p.x;
+});
+cvs.addEventListener('pointermove', e=>{
+  if(G.screen!=='play'||!R) return;
+  const p=pos(e);
+  if(R.spec.k==='sort'){
+    for(const it of R.items) if(it.drag){ it.x=p.x+it.drag.dx; it.y=p.y+it.drag.dy; }
+    return;
+  }
+  G.pointerX=p.x;
+  if(G.pointerOn || e.pressure>0 || e.pointerType==='mouse') G.catcher.tx=p.x;
+});
+cvs.addEventListener('pointerup', e=>{
+  if(G.screen!=='play'||!R) return;
+  const p=pos(e);
+  G.pointerOn=false;
+  // сортировка обрабатывается в window.pointerup (см. ниже)
+});
+
+window.addEventListener('pointerup', e=>{
+  if(G.screen!=='play'||!R||R.spec.k!=='sort') return;
+  const p=pos(e);
+  let changed=false;
+  for(const it of R.items){
+    if(!it.drag) continue;
+    let placed=false;
+    for(const bin of R.spec.bins){
+      const rect=bin._rect; if(!rect) continue;
+      if(p.x>=rect.x-20 && p.x<=rect.x+rect.w+20 && p.y>=rect.y-40 && p.y<=rect.y+rect.h+20){
+        placed=true;
+        if(bin.match.includes(it.emoji)){ goodAction(); burst(it.x,it.y,['✨','⭐'],4); }
+        else { badAction(); }
+        it.dead=true; changed=true; break;
+      }
+    }
+    if(!placed){ it.drag=null; }
+  }
+  if(changed){ R.items=R.items.filter(i=>!i.dead); updateHUD(); }
+});
+
+function handleCardClick(p){
+  if(R.locked) return;
+  const rects=R._cardRects||[];
+  for(let i=0;i<rects.length;i++){
+    const r=rects[i], cd=R.cards[i];
+    if(cd.done||cd.open) continue;
+    if(p.x>=r.x&&p.x<=r.x+r.w&&p.y>=r.y&&p.y<=r.y+r.h){
+      cd.open=true; sfxCard();
+      R.flipped.push(i);
+      if(R.flipped.length===2){
+        const [a,b]=R.flipped;
+        if(R.cards[a].e===R.cards[b].e){
+          R.cards[a].done=true; R.cards[b].done=true;
+          R.done++; G.score+=15; burst(r.x+r.w/2,r.y+r.h/2,['🎉','⭐'],6);
+          tone(760,0.12,'sine',0.14);
+          R.flipped=[];
+          updateHUD();
+          if(R.done>=R.need) finishRound();
+        } else {
+          R.locked=true;
+          setTimeout(()=>{
+            R.cards[a].open=false; R.cards[b].open=false; R.flipped=[]; R.locked=false;
+            badAction();
+          }, 700);
+        }
+      }
+      return;
+    }
+  }
+}
+
+function handleQuizClick(p){
+  if(R.locked||R.answered) return;
+  const sp=R.spec;
+  const rects=R._optRects||[];
+  for(const r of rects){
+    if(p.x>=r.x&&p.x<=r.x+r.w&&p.y>=r.y-10&&p.y<=r.y+r.h+10){
+      const correct = (sp.k==='odd') ? (r.v===sp.items[sp.ans]) : (r.v===sp.ans);
+      if(correct){
+        G.score+=20; sfxStar(1); burst(r.x+r.w/2,r.y+r.h/2,['⭐','✨','🎉'],10);
+        R.done=R.need; finishRound();
+      } else {
+        // не наказываем: мягкая подсказка + варианты перемешиваются
+        G.combo=0; sfxWrong(); toast('Попробуй ещё 🤔');
+        if(sp.opts){ sp.opts = sp.opts.slice().sort(()=>Math.random()-0.5); }
+        speak('Попробуй ещё раз');
+      }
+      return;
+    }
+  }
+}
+
+/* ============================================================
+   14. ЭКРАНЫ
+   ============================================================ */
+function showScreen(id){
+  ['scrMenu','scrMap','scrResult'].forEach(s=>{
+    document.getElementById(s).classList.toggle('hidden', s!==id);
+  });
+}
+
+function renderMenu(){
+  const st=totalStars(), rk=rankFor(st), nx=nextRank(st);
+  document.getElementById('rankName').textContent = rk.e+'  '+rk.n;
+  const from=rk.s, to=nx?nx.s:MAX_STARS;
+  const pct = nx? Math.round(((st-from)/(to-from))*100) : 100;
+  document.getElementById('rankFill').style.width=pct+'%';
+  document.getElementById('rankInfo').textContent = nx
+    ? st+' из '+MAX_STARS+' звёзд · до звания «'+nx.n+'» осталось '+(nx.s-st)
+    : 'Все звёзды собраны! Ты — Легенда Лукошка 👑';
+}
+
+function renderMap(){
+  const scr=document.getElementById('scrMap');
+  if(scr) scr.scrollTop=0;
+  const wrap=document.getElementById('mapWrap');
+  wrap.innerHTML='';
+  for(let w=0;w<WORLDS.length;w++){
+    const lvls=LEVELS.filter(l=>l.w===w);
+    const worldStars = lvls.reduce((s,l)=> s + ((save.levels[l.n]||{}).stars||0), 0);
+    const medal = worldStars>=30 ? '<span class="medal">🏅 золото мира</span>' : '<span class="medal">'+worldStars+'/30 ⭐</span>';
+    const div=document.createElement('div'); div.className='world';
+    div.innerHTML='<h3>'+WORLDS[w].emoji+' Мир '+(w+1)+'. '+WORLDS[w].name+' '+medal+'</h3>';
+    const tiles=document.createElement('div'); tiles.className='tiles';
+    lvls.forEach(l=>{
+      const unlocked = l.n===1 || !!((save.levels[l.n-1]||{}).stars) || !!(save.levels[l.n]);
+      const st=(save.levels[l.n]||{}).stars||0;
+      const b=document.createElement('button');
+      b.className='tile'+(unlocked?'':' locked')+((l.n%10===0)?' boss':'');
+      b.innerHTML = (l.n%10===0?'<span class="crown">👑</span>':'') +
+        '<span>'+l.n+'</span><span class="st">'+(st? '★'.repeat(st)+'☆'.repeat(3-st) : '···')+'</span>';
+      b.title=l.t;
+      b.onclick=()=>{ if(unlocked){ startLevel(l.n); } };
+      tiles.appendChild(b);
+    });
+    div.appendChild(tiles);
+    wrap.appendChild(div);
+  }
+  document.getElementById('mapStars').textContent='⭐ '+totalStars();
+}
+
+function showResult(stars, passed){
+  const lv=G.level;
+  document.getElementById('resMascot').textContent = stars===3? '🦔🌟' : stars===2? '🦔😊' : '🦔💪';
+  document.getElementById('resTitle').textContent = stars===3? 'Великолепно!' : stars===2? 'Хорошо!' : 'Неплохо!';
+  const row=document.getElementById('starsRow');
+  row.innerHTML='';
+  for(let i=0;i<3;i++){
+    const s=document.createElement('span');
+    s.textContent = i<stars? '⭐' : '☆';
+    s.style.animationDelay=(i*0.18)+'s';
+    row.appendChild(s);
+    if(i<stars) setTimeout(()=>sfxStar(i),300+i*180);
+  }
+  document.getElementById('resScore').textContent = G.score+' очков · ошибок: '+G.errs;
+  const st=totalStars(), rk=rankFor(st), nx=nextRank(st);
+  let line = rk.e+' Звание: '+rk.n;
+  if(nx) line += ' · до «'+nx.n+'» — '+(nx.s-st)+' ⭐';
+  document.getElementById('resRankLine').textContent = line;
+  document.getElementById('resHint').textContent = stars===3
+    ? 'Ты собрал все звёзды уровня! Так держать, '+lv.t+'.'
+    : 'Попробуй ещё раз без ошибок — получишь 3 звезды!';
+  const nextBtn=document.getElementById('btnNext');
+  nextBtn.style.display = (lv.n<100)?'inline-block':'none';
+  showScreen('scrResult');
+  renderMenu();
+}
+
+/* ============================================================
+   15. КНОПКИ
+   ============================================================ */
+document.getElementById('btnPlay').onclick = ()=>{
+  audio();
+  // первый непройденный уровень
+  let n=1; for(let i=1;i<=100;i++){ if(!(save.levels[i]&&save.levels[i].stars)){ n=i; break; } }
+  startLevel(n);
+};
+document.getElementById('btnMap').onclick = ()=>{ renderMap(); showScreen('scrMap'); };
+document.getElementById('btnMenu').onclick = ()=>{ renderMenu(); showScreen('scrMenu'); };
+document.getElementById('btnToMap').onclick = ()=>{ renderMap(); showScreen('scrMap'); };
+document.getElementById('btnBack').onclick = ()=>{ renderMap(); showScreen('scrMap'); G.screen='map';
+  document.getElementById('hud').classList.add('hidden');
+  document.getElementById('prompt').classList.add('hidden'); };
+document.getElementById('btnRetry').onclick = ()=>{ startLevel(G.level.n); };
+document.getElementById('btnNext').onclick = ()=>{ startLevel(Math.min(100,G.level.n+1)); };
+document.getElementById('btnSound').onclick = ()=>{
+  save.sound=!save.sound; persist();
+  document.getElementById('btnSound').textContent = save.sound?'🔊':'🔇';
+};
+document.getElementById('btnSay').onclick = ()=>{
+  if(!save.sound){ save.sound=true; persist(); }
+  speak(document.getElementById('promptBox').textContent);
+};
+
+/* ---------- старт ---------- */
+resize();
+document.getElementById('btnSound').textContent = save.sound?'🔊':'🔇';
+renderMenu();
+showScreen('scrMenu');
+requestAnimationFrame(loop);
+
+/* ---------- PWA: офлайн-режим и установка ---------- */
+if('serviceWorker' in navigator && (location.protocol==='http:'||location.protocol==='https:')){
+  window.addEventListener('load',()=>{
+    navigator.serviceWorker.register('sw.js').catch(()=>{});
+  });
+}
+</script>
+</body>
+</html>
