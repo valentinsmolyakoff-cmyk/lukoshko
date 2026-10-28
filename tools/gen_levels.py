@@ -238,22 +238,37 @@ for wi, c in enumerate(C):
         o = {"speed":round(speed,2), "rate":int(max(700,rate))}
         g, b = c['Ga'], c['Ba']
         if variant == 'plain':
-            q = f"Лови {c['G'][0]}, а всё лишнее пропускай"
-            return {"k":"catch","q":q,"good":c['G'],"bad":[],"need":need,"opts":o}
+            # ловим РОВНО один вид, остальное — отвлекающие
+            good = [c['G'][0]]
+            bad = [x for x in (c['B'] + c['G'][1:]) if x != good[0]]
+            q = f"Лови только {good[0]} — остальное пропускай"
+            return {"k":"catch","q":q,"good":good,"bad":bad,"need":need,"opts":o}
+        if variant == 'only':
+            # «только красные яблоки»: похожие предметы другого вида/цвета — нельзя
+            good = [c['G'][0]]
+            bad = [x for x in (c['G'][1:] + c['B']) if x != good[0]]
+            names = " и ".join(bad[:2])
+            q = f"Собери только {good[0]} — {names} не бери!"
+            return {"k":"catch","q":q,"good":good,"bad":bad,"need":need,"opts":o}
         if variant == 'avoid':
-            g2 = [x for x in c['G'] if x != c['G'][0]]
-            ok_list = " и ".join([c['G'][0]] + g2[:1])
-            q = f"Лови {ok_list}, а {c['B'][0]} не трогай"
-            return {"k":"catch","q":q,"good":c['G'],"bad":c['B'],"need":need,"opts":o}
+            good = c['G'][:2] or [c['G'][0]]
+            bad = [x for x in c['B'] if x not in good]
+            ok_list = " и ".join(good)
+            stop = " и ".join(bad[:2])
+            q = f"Лови {ok_list}, а {stop} не трогай"
+            return {"k":"catch","q":q,"good":good,"bad":bad,"need":need,"opts":o}
         if variant == 'exact':
             q = f"Поймай ровно {need} и остановись!"
-            return {"k":"catch","q":q,"good":[c['G'][0]],"bad":[],"need":need,"exact":True,"opts":o}
+            bad = [x for x in c['B'] if x != c['G'][0]]
+            return {"k":"catch","q":q,"good":[c['G'][0]],"bad":bad,"need":need,"exact":True,"opts":o}
         if variant == 'big':
             q = "Лови только БОЛЬШИЕ — маленькие пропускай"
             return {"k":"catch","q":q,"good":[c['G'][0]],"bad":[c['G'][0]],"need":need,"sizeRule":"big","opts":o}
         if variant == 'wobble':
-            q = "Лови всё хорошее — оно летит зигзагом!"
-            return {"k":"catch","q":q,"good":c['G'],"bad":c['B'],"need":need+1,"wobble":True,"opts":o}
+            good = c['G'][:2]
+            bad = [x for x in c['B'] if x not in good]
+            q = f"Лови {(' и '.join(good))} — они летят зигзагом!"
+            return {"k":"catch","q":q,"good":good,"bad":bad,"need":need+1,"wobble":True,"opts":o}
         if variant == 'unique':
             q = "Собери по одному каждого вида"
             return {"k":"catch","q":q,"good":g[:len(g)],"bad":[],"need":len(g),"unique":True,"opts":o}
@@ -368,7 +383,7 @@ for wi, c in enumerate(C):
             elif i == 2: mains = [(catch_lvl, 'avoid')]
             elif i == 3: mains = [(mem_lvl, None)]
             elif i == 4: mains = [(seq_lvl, None)]
-            elif i == 5: mains = [(catch_lvl, 'big' if wi%2 else 'wobble')]
+            elif i == 5: mains = [(catch_lvl, ('only','big','wobble')[wi % 3])]
             elif i == 6: mains = [(odd_lvl, None)]
             elif i == 7: mains = [(choice_lvl, None)]
             else:        mains = [(novelty, None)]
