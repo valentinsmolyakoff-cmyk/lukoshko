@@ -2730,7 +2730,7 @@ function aiTextIsGood(t){
 }
 function adviceFacts(){
  const f=kidFacts(),n=(v,max)=>Math.max(0,Math.min(max,Math.round(Number(v)||0)));
- return {played:n(f.played,200),stars:n(f.st,600),skills:f.sk.map(({name,pct,tot})=>({name,pct:n(pct,100),tot:n(tot,10000000)})),
+ return {played:n(f.played,200),stars:n(f.st,600),skills:f.sk.map(({name,pct,tot})=>{const all=n(tot,10000000);return {name,ok:Math.min(all,Math.round(all*(n(pct,100)/100))),tot:all};}),
  recent:(save.roundLog||[]).slice(-6).map(r=>({n:n(r.n,200),k:r.k,errs:n(r.errs,100000),sec:n(r.sec,86400)})),
  levels:(practiceLevels().match(/\d+/g)||[]).map(Number).filter(v=>v>=1&&v<=200).slice(0,3)};
 }
