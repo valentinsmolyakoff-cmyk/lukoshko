@@ -35,7 +35,7 @@ for name,svg in src['hero'].items():
 for g in ['🔦','🥕','🍯','🎨','🥁','🎸','🔭','🧭','🗺️','🏆','💎','🎈','🪁','🌟']:
  art=src['pictures'][g];inner=art[art.index('>')+1:art.rindex('</svg>')]
  # Full-size transparent layers keep hands aligned regardless of CSS aspect ratio.
- item='<svg xmlns="http://www.w3.org/2000/svg" width="300" height="262" viewBox="0 0 300 262"><svg x="230" y="187" width="36" height="36" viewBox="0 0 36 36">'+inner+'</svg></svg>'
+ item='<svg xmlns="http://www.w3.org/2000/svg" width="300" height="262" viewBox="0 0 300 262"><svg x="237" y="199" width="34" height="34" viewBox="0 0 36 36">'+inner+'</svg></svg>'
  layers['hand:'+g]=png(item,300,262)
 pictures={g:png(svg) for g,svg in src['pictures'].items()}
 js='/* Embedded PNG art. Twemoji graphics © Twitter, Inc and contributors, CC-BY 4.0; PICTURES-LICENSE.md. */\nconst GAME_PICTURES='+json.dumps(pictures,ensure_ascii=False,separators=(',',':'))+';\nconst TISHKA_LAYERS='+json.dumps(layers,separators=(',',':'))+';\n'

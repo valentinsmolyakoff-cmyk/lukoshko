@@ -17,10 +17,11 @@ async function call(body,extra={}){
  const key=process.env.GEMINI_API_KEY;delete process.env.GEMINI_API_KEY;
  assert.equal((await call(valid)).status,503);
  process.env.GEMINI_API_KEY=key||'mock';
- const real=global.fetch;let sent;
- global.fetch=async(url,o)=>{sent=JSON.parse(o.body);return {ok:true,json:async()=>({candidates:[{content:{parts:[{text:'В заданиях на память ребёнок часто находит верную пару. Лабиринты пока можно проходить без спешки: предложите сначала провести пальцем по дорожке и остановиться на каждом повороте. Уделите этому пять минут, а затем попробуйте уровень 29.'}]}}]})}};
+ const real=global.fetch;let sent,generated=0;
+ global.fetch=async(url,o)=>{generated++;sent=JSON.parse(o.body);return {ok:true,json:async()=>({candidates:[{content:{parts:[{text:'В заданиях на память ребёнок часто находит верную пару. Лабиринты пока можно проходить без спешки: предложите сначала провести пальцем по дорожке и остановиться на каждом повороте. Уделите этому пять минут, а затем попробуйте уровень 29.'}]}}]})}};
  const a=await call(valid);assert.equal(a.status,200);assert(!JSON.stringify(sent).includes(process.env.GEMINI_API_KEY));
- assert.equal((await call(valid)).status,200);
+ const cached=await call(valid);assert.equal(cached.status,200);assert.equal(cached.body.cached,true);assert.equal(generated,1);
+ const fresh=await call({...valid,refresh:true});assert.equal(fresh.status,200);assert.equal(fresh.body.cached,false);assert.equal(fresh.body.source,'ai');assert.equal(generated,2);assert.notEqual(fresh.body.requestId,cached.body.requestId);assert.ok(fresh.body.generatedAt);
  global.fetch=async()=>({ok:false,status:429});
  assert.equal((await call({...valid,played:9})).status,429);
  let attempts=0;

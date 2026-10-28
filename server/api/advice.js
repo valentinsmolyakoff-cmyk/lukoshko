@@ -1,4 +1,4 @@
-const {createHash}=require('node:crypto');
+const {createHash,randomUUID}=require('node:crypto');
 const skills=['Внимание и реакция','Буквы и чтение','Счёт','Память','Логика и обобщение','Закономерности','Знания о мире','Мелкая моторика','Чувство ритма'];
 const buckets=new Map(), cache=new Map();
 const num=(v,max)=>Number.isInteger(v)&&v>=0&&v<=max;
@@ -7,7 +7,8 @@ module.exports=async(req,res)=>{
  const origin=req.headers.origin;
  const allowed=(process.env.ALLOWED_ORIGINS||'https://valentinsmolyakoff-cmyk.github.io').split(',');
  res.setHeader('Cache-Control','no-store');res.setHeader('Vary','Origin');
- const send=(code,obj)=>res.status(code).json(obj);
+ const requestId=randomUUID();
+ const send=(code,obj)=>res.status(code).json({...obj,requestId});
  if(!allowed.includes(origin))return send(403,{error:'origin'});
  res.setHeader('Access-Control-Allow-Origin',origin);
  res.setHeader('Access-Control-Allow-Methods','POST, OPTIONS');res.setHeader('Access-Control-Allow-Headers','Content-Type');
@@ -15,12 +16,12 @@ module.exports=async(req,res)=>{
  if(req.method!=='POST')return send(405,{error:'method'});
  if(!String(req.headers['content-type']||'').startsWith('application/json'))return send(415,{error:'content_type'});
  let body=req.body;try{if(typeof body==='string')body=JSON.parse(body)}catch{return send(400,{error:'data'})}
- if(!body||JSON.stringify(body).length>4096||!num(body.played,200)||!num(body.stars,600)||!Array.isArray(body.skills)||body.skills.length>9||!Array.isArray(body.levels)||body.levels.length>3)return send(400,{error:'data'});
+ if(!body||(body.refresh!==undefined&&typeof body.refresh!=='boolean')||JSON.stringify(body).length>4096||!num(body.played,200)||!num(body.stars,600)||!Array.isArray(body.skills)||body.skills.length>9||!Array.isArray(body.levels)||body.levels.length>3)return send(400,{error:'data'});
  if(body.skills.some(s=>!s||!skills.includes(s.name)||!num(s.pct,100)||!num(s.tot,10000000))||body.levels.some(n=>!num(n,200)||n===0))return send(400,{error:'data'});
  if(!process.env.GEMINI_API_KEY)return send(503,{error:'not_configured'});
  const facts={played:body.played,stars:body.stars,skills:body.skills.map(({name,pct,tot})=>({name,pct,tot})),levels:body.levels};
  const now=Date.now(),key=createHash('sha256').update(JSON.stringify(facts)).digest('hex');
- const hit=cache.get(key);if(hit&&now-hit.at<3600000)return send(200,{text:hit.text});
+ const hit=cache.get(key);if(!body.refresh&&hit&&now-hit.at<3600000)return send(200,{text:hit.text,source:'ai',cached:true,generatedAt:hit.generatedAt});
  // Best-effort per-instance throttle. A distributed edge limit must supplement this in production.
  const ip=createHash('sha256').update(String(req.headers['x-forwarded-for']||req.socket?.remoteAddress||'unknown').split(',')[0]).digest('hex');
  for(const [k,v]of buckets)if(now-v.at>3600000)buckets.delete(k);
@@ -43,6 +44,6 @@ module.exports=async(req,res)=>{
   const data=await response.json();
   const text=(data.candidates?.[0]?.content?.parts||[]).filter(p=>!p.thought).map(p=>p.text||'').join('').replace(/\s+/g,' ').trim();
   if(text.length<60||text.length>1000||/[A-Za-z]{4,}|[*#`]|\d\s*%/.test(text))return send(502,{error:'invalid_response'});
-  if(cache.size>=250)cache.delete(cache.keys().next().value);cache.set(key,{at:now,text});return send(200,{text});
+  if(cache.size>=250)cache.delete(cache.keys().next().value);const generatedAt=new Date().toISOString();cache.set(key,{at:now,text,generatedAt});return send(200,{text,source:'ai',cached:false,generatedAt});
  }catch(e){return send(502,{error:'provider_unavailable',reason:e.name==='TimeoutError'?'timeout':'network'})}
 };
