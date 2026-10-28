@@ -2721,8 +2721,7 @@ function localAdvice(){
 
 /* ---- Gemini через сервер: отправляем только обезличенную статистику ---- */
 function aiTextIsGood(t){
-  return typeof t==='string' && t.length>=60 && t.length<=1500 &&
-    !/[A-Za-z]{4,}|[*#`]|\d\s*%/.test(t);
+  return typeof t==='string' && t.length>=40 && t.length<=3000 && !/<[a-z/]|```/.test(t);
 }
 function adviceFacts(){
  const f=kidFacts(),n=(v,max)=>Math.max(0,Math.min(max,Math.round(Number(v)||0)));

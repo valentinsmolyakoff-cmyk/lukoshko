@@ -56,7 +56,10 @@ module.exports=async(req,res)=>{
   if(!response.ok)return send(response.status===429?429:502,{error:'provider_unavailable',upstreamStatus:response.status});
   const data=await response.json();
   const text=(data.candidates?.[0]?.content?.parts||[]).filter(p=>!p.thought).map(p=>p.text||'').join('').replace(/\s+/g,' ').trim();
-  if(text.length<60||text.length>1000||/[A-Za-z]{4,}|[*#`]|\d\s*%/.test(text))return send(502,{error:'invalid_response'});
+  // Свободный ответ может быть длиннее прежнего лимита: отбраковываем только пустое,
+  // разметку и проценты. Латинские слова просим не использовать в самой инструкции,
+  // но не считаем их поводом выбросить готовый анализ.
+  if(text.length<40||text.length>3000||/<[a-z/]|```/.test(text))return send(502,{error:'invalid_response'});
   if(body.refresh&&((body.previousHash&&textDigest(text)===body.previousHash)||(previous&&textDigest(text)===textDigest(previous))))return send(502,{error:'duplicate_response'});
   if(cache.size>=250)cache.delete(cache.keys().next().value);const generatedAt=new Date().toISOString();cache.set(key,{at:now,text,generatedAt});return send(200,{text,source:'ai',scope,cached:false,generatedAt});
  }catch(e){return send(502,{error:'provider_unavailable',reason:e.name==='TimeoutError'?'timeout':'network'})}
