@@ -1,40 +1,39 @@
-"""Original side-on Tishka artwork. Rebuild source and then run build_art_bundle.py."""
+"""Natural side-on Tishka: original artwork. Run, then build_art_bundle.py."""
 from pathlib import Path
-import json,math
+import json,math,random
 root=Path(__file__).resolve().parents[1]
 def hero(o={}):
- pts=[]
- for i in range(33):
-  a=math.pi-i*math.pi/32;r=1 if i%2==0 else .94
-  pts.append(f'{139+101*math.cos(a)*r:.1f},{199-104*math.sin(a)*r:.1f}')
- sp='M'+' L'.join(pts)+' L225 221 L57 224 Z'
- hat=o.get('head')=='hat';crown=o.get('head')=='crown'
- paws='#ec97a8' if o.get('paws') else 'url(#fur)'
+ rng=random.Random(42);needles=[]
+ for _ in range(185):
+  x=rng.uniform(48,211);y=rng.uniform(108,212)
+  if ((x-132)/91)**2+((y-171)/65)**2>1:continue
+  dx=(x-110)*.11-5;dy=-rng.uniform(7,14)
+  needles.append(f'<path d="M{x:.1f} {y:.1f} l{dx:.1f} {dy:.1f}" stroke="{rng.choice(["#b69c78","#d6c09a","#806b53"])}" stroke-width="{rng.uniform(1.1,2):.1f}" stroke-linecap="round"/>')
+ fur='#d5979d' if o.get('paws') else 'url(#fur)'
  return f'''<svg xmlns="http://www.w3.org/2000/svg" width="300" height="262" viewBox="0 0 300 262">
- <defs><linearGradient id="spine" x2=".2" y2="1"><stop stop-color="#ae7b54"/><stop offset="1" stop-color="#77503d"/></linearGradient><linearGradient id="fur" x2=".4" y2="1"><stop stop-color="#fff1d3"/><stop offset="1" stop-color="#e6ba85"/></linearGradient></defs>
- <ellipse cx="154" cy="241" rx="111" ry="9" fill="#80522c" opacity=".13"/>
- <path d="M57 211 q-20 5 -19 13 q8 4 26 -6" fill="#c39768"/>
- <ellipse cx="91" cy="224" rx="20" ry="10" fill="#b88455"/>
- <ellipse cx="191" cy="224" rx="17" ry="10" fill="#b88455"/>
- <path d="{sp}" fill="url(#spine)" stroke="#90633f" stroke-width="1.2" stroke-linejoin="round"/>
- <path d="M65 184 l-4 -13 m17 -31 4 -10 m23 -14 7 -7 m25 13 10 -7 m-37 52 6 -11 m51 7 9 -7 m-24 39 9 -7" stroke="#e6bd89" stroke-width="3.5" opacity=".55" stroke-linecap="round"/>
- <path d="M114 180 Q146 153 181 172 Q208 183 226 206 Q220 230 184 231 L109 230 Q87 215 114 180Z" fill="url(#fur)"/>
- <path d="M187 135 Q219 126 236 151 Q247 167 271 173 Q281 179 271 187 Q248 205 220 204 Q199 204 183 187 Q163 161 187 135Z" fill="url(#fur)"/>
- <ellipse cx="183" cy="147" rx="18" ry="20" fill="#d9a16d"/><ellipse cx="185" cy="148" rx="11" ry="12" fill="#e8afa0"/>
- <path d="M209 137 q9 -7 17 0" fill="none" stroke="#87573e" stroke-width="3" stroke-linecap="round"/><ellipse cx="223" cy="158" rx="16" ry="19" fill="#fffdf2" stroke="#c49a6c" stroke-width="1.3"/><ellipse cx="230" cy="163" rx="8" ry="10" fill="#3b302b"/><circle cx="228" cy="159" r="3" fill="white"/>
- <ellipse cx="213" cy="181" rx="12" ry="7" fill="#f2b1a0"/>
- <ellipse cx="274" cy="175" rx="15" ry="11" transform="rotate(-8 274 175)" fill="#42362e"/><ellipse cx="270" cy="171" rx="4.5" ry="2.5" fill="#fff0da"/>
- <path d="M253 189 q-10 19 -22 4 q9 2 22 -4Z" fill="#80503f"/><path d="M237 199 q6 -5 11 -1 q-5 6 -11 1" fill="#ee9b9b"/><path d="M234 193 l5 1 -1 4 -4 -1Z" fill="#fff4da"/>
- {('<g><rect x="98" y="129" width="67" height="70" rx="22" fill="#cb8251" stroke="#a3623c" stroke-width="2"/><rect x="106" y="163" width="49" height="28" rx="10" fill="#efa665"/><path d="M113 129 q8 -15 21 0" stroke="#9e5a36" stroke-width="5" fill="none"/><circle cx="130" cy="177" r="4" fill="#fff0b1"/><path d="M166 144 q18 12 8 50" stroke="#ad663c" stroke-width="7" fill="none" stroke-linecap="round"/></g>') if o.get('back') else ''}
- <ellipse data-slot="paws" cx="213" cy="228" rx="19" ry="10" fill="{paws}"/>
- <path d="M209 198 q7 13 20 14" fill="none" stroke="#dfae79" stroke-width="13" stroke-linecap="round"/>
- <ellipse data-slot="paws" cx="233" cy="211" rx="13" ry="11" transform="rotate(-15 233 211)" fill="{paws}"/>
- {('<path d="M205 223 l17 1 m4 -17 13 -4" stroke="#ffe9db" stroke-width="4" stroke-linecap="round"/>') if o.get('paws') else ''}
- {('<g><path d="M105 219 q-5 -10 9 -11 h17 q8 1 8 13 l9 4 q6 10 -8 11 h-29 q-13 -1 -6 -17Z" fill="#719bd0" stroke="#4b7aaa" stroke-width="2"/><path d="M106 232 h36 M119 218 h12" stroke="#fff4dc" stroke-width="4" stroke-linecap="round"/></g>') if o.get('feet') else '<ellipse data-slot="feet" cx="126" cy="228" rx="25" ry="11" fill="url(#fur)"/>'}
- {('<path d="M182 186 q18 18 37 12 l-1 14 q-24 4 -43 -16Z" fill="#e77f6b"/><path d="M185 201 q-10 9 -7 27 l17 1 q-3 -13 5 -22Z" fill="#cd6255"/><path d="M180 218 h13 m-14 6 h14" stroke="#ffe2b2" stroke-width="3"/>') if o.get('neck') else ''}
- {('<path d="M184 150 l22 5" stroke="#394758" stroke-width="4"/><rect x="205" y="141" width="37" height="32" rx="8" fill="#394758"/><path d="M213 154 l9 1" stroke="#b0e1e6" stroke-width="3" stroke-linecap="round"/>') if o.get('eyes') else ''}
- {('<g transform="rotate(11 211 135)"><ellipse cx="211" cy="135" rx="33" ry="7" fill="#3d495b"/><path d="M189 133 l2 -33 q20 -8 40 0 l2 33Z" fill="#485971"/><path d="M191 123 h41" stroke="#ef9d81" stroke-width="7"/></g>') if hat else ''}
- {('<g transform="rotate(11 211 135)"><path d="M183 132 l-2 -27 17 12 12 -24 13 24 17 -12 -3 27Z" fill="#ffd66d" stroke="#d7a245" stroke-width="2"/><path d="M184 133 h53" stroke="#e7b047" stroke-width="6" stroke-linecap="round"/><circle cx="211" cy="121" r="4" fill="#e8879d"/></g>') if crown else ''}
+ <defs><linearGradient id="spine" x2=".2" y2="1"><stop stop-color="#675342"/><stop offset="1" stop-color="#3e352e"/></linearGradient><linearGradient id="fur" x2=".6" y2="1"><stop stop-color="#e9d8b6"/><stop offset="1" stop-color="#b69a76"/></linearGradient></defs>
+ <ellipse cx="153" cy="240" rx="111" ry="8" fill="#725d42" opacity=".14"/>
+ <path d="M53 214 q-20 2 -15 9 l23 -5" fill="#a28b6c"/>
+ <ellipse cx="94" cy="226" rx="19" ry="6" fill="#867258"/><ellipse cx="215" cy="225" rx="16" ry="6" fill="#867258"/>
+ <path d="M43 199 Q35 153 69 122 Q94 98 134 104 Q183 105 206 140 Q225 166 219 211 Q172 234 77 227 Q48 224 43 199Z" fill="url(#spine)"/>
+ <g opacity=".9">{''.join(needles)}</g>
+ <path d="M147 192 Q178 174 207 187 Q231 203 223 223 Q183 235 129 226 Q115 207 147 192Z" fill="url(#fur)"/>
+ <path d="M179 158 Q201 148 220 165 Q241 183 273 191 Q282 195 273 201 Q248 209 226 214 Q197 220 181 208 Q166 188 179 158Z" fill="url(#fur)"/>
+ <ellipse cx="192" cy="166" rx="10" ry="13" fill="#9f8669"/><ellipse cx="194" cy="166" rx="6" ry="8" fill="#c4aa8c"/>
+ <ellipse cx="221" cy="177" rx="4.4" ry="5" fill="#29251f"/><circle cx="222" cy="175.5" r="1.3" fill="#fff9e9"/>
+ <ellipse cx="275" cy="194" rx="7" ry="4.5" fill="#332d27"/><ellipse cx="274" cy="192.6" rx="2" ry=".8" fill="#c5bba9"/>
+ <path d="M246 201 q8 1 17 -2" stroke="#8c765d" stroke-width="1.1" fill="none"/>
+ <path d="M205 192 l5 2 m4 -1 5 2 m-11 8 5 1 m14 -3 4 1 m-33 -18 4 1" stroke="#9d866a" stroke-width="1" stroke-linecap="round" opacity=".6"/>
+ {('<g><path d="M111 140 q23 -7 46 4 l-1 51 q-23 9 -48 -2Z" fill="#81845a" stroke="#5a6040" stroke-width="2"/><rect x="114" y="167" width="35" height="22" rx="6" fill="#a4a374"/><path d="M122 139 q7 -13 16 2 M160 146 q11 19 2 55" fill="none" stroke="#665336" stroke-width="4"/><path d="M130 174 v7" stroke="#e0c590" stroke-width="3"/></g>') if o.get('back') else ''}
+ <path d="M215 211 q3 10 19 16" stroke="#b79a77" stroke-width="11" fill="none" stroke-linecap="round"/>
+ <ellipse data-slot="paws" cx="235" cy="228" rx="16" ry="7" fill="{fur}"/>
+ <ellipse data-slot="paws" cx="219" cy="223" rx="12" ry="6" fill="{fur}"/>
+ {('<path d="M221 222 l6 -2 M229 223 l3 -5" stroke="#f9e4d6" stroke-width="3"/>') if o.get('paws') else ''}
+ {('<g><path d="M100 222 q0 -8 11 -8 h13 q7 2 8 10 l7 3 q5 7 -8 8 h-24 q-10 0 -7 -13Z" fill="#6c8ba4" stroke="#46647a" stroke-width="1.5"/><path d="M103 232 h31 M112 221 h10" stroke="#f6efd9" stroke-width="2.5" stroke-linecap="round"/></g>') if o.get('feet') else '<ellipse data-slot="feet" cx="117" cy="230" rx="22" ry="7" fill="url(#fur)"/>'}
+ {('<path d="M181 199 q17 14 38 13 l1 10 q-24 1 -44 -13Z" fill="#bb7355"/><path d="M195 214 q-4 9 0 19 l13 -2 q-5 -10 1 -15Z" fill="#a45e48"/><path d="M195 226 l10 -2" stroke="#f0c69a" stroke-width="2"/>') if o.get('neck') else ''}
+ {('<path d="M194 172 l17 2" stroke="#3e4549" stroke-width="2.5"/><rect x="212" y="169" width="21" height="15" rx="5" fill="#39434b"/><path d="M216 172 l9 1" stroke="#b6cfcb" stroke-width="2"/>') if o.get('eyes') else ''}
+ {('<g transform="rotate(16 201 155)"><ellipse cx="201" cy="155" rx="26" ry="5.5" fill="#3b4247"/><path d="M184 154 l2 -28 q16 -6 32 0 l2 28Z" fill="#4a535a"/><path d="M186 145 h33" stroke="#bf8565" stroke-width="5"/></g>') if o.get('head')=='hat' else ''}
+ {('<g transform="rotate(16 201 155)"><path d="M178 153 l-1 -23 13 10 11 -19 10 19 14 -10 -3 23Z" fill="#dab768" stroke="#ab8a43" stroke-width="1.5"/><path d="M180 153 h41" stroke="#be9b55" stroke-width="4"/></g>') if o.get('head')=='crown' else ''}
  </svg>'''
 p=root/'tools/art-source.json';data=json.loads(p.read_text())
 specs={'base':{},'hat':{'head':'hat'},'crown':{'head':'crown'},'glasses':{'eyes':True},'scarf':{'neck':True},'mittens':{'paws':True},'shoes':{'feet':True},'backpack':{'back':True}}
