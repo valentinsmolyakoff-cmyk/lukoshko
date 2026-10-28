@@ -12,8 +12,9 @@ with sync_playwright() as p:
   # Follow the real parent lock; no API before the correct answer.
   page.locator('#btnParent').click();assert not calls
   page.locator('#lockInput').fill(str(page.evaluate('()=>lockAnswer')));page.locator('#btnLockOk').click()
-  page.wait_for_function("()=>document.getElementById('aiNote').textContent.startsWith('Рекомендация ИИ · Gemini')")
+  page.wait_for_function("()=>document.getElementById('aiNote').textContent.startsWith('Рекомендация ИИ · ')")
   assert len(calls)==1;assert page.locator('#aiOut').inner_text()==ADVICE
+  assert 'Gemini' not in page.locator('#scrParent').inner_text()
   page.evaluate('()=>loadParentAdvice(false)');assert len(calls)==1
   report=page.evaluate(r'''()=>{
    save.sound=false;const old=drawLabel;let pictures=0;const missing=new Set();

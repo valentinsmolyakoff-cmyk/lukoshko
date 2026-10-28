@@ -2,15 +2,20 @@
 from pathlib import Path
 from collections import Counter
 import xml.etree.ElementTree as ET
-import json,base64,cairosvg
+import json,base64,cairosvg,copy
 root=Path(__file__).resolve().parents[1]
 src=json.loads((root/'tools/art-source.json').read_text())
 def png(svg,w=96,h=96):
  return 'data:image/png;base64,'+base64.b64encode(cairosvg.svg2png(bytestring=svg.encode(),output_width=w,output_height=h)).decode()
-def serialize(e):return ET.tostring(e,encoding='unicode')
+def serialize(e):
+ e=copy.deepcopy(e)
+ for node in e.iter():
+  node.tail=None
+  if node.text and not node.text.strip():node.text=None
+ return ET.tostring(e,encoding='unicode')
 base=ET.fromstring(src['hero']['base']);nodes=list(base);defs=nodes[0]
-neutral_paws=[n for n in nodes if n.tag.endswith('ellipse') and n.get('cx') in ['199','116'] and n.get('cy') in ['201','211']]
-neutral_feet=[n for n in nodes if n.tag.endswith('ellipse') and n.get('cy')=='227']
+neutral_paws=[n for n in nodes if n.get('data-slot')=='paws']
+neutral_feet=[n for n in nodes if n.get('data-slot')=='feet']
 def layer(children):
  e=ET.Element('svg',{'xmlns':'http://www.w3.org/2000/svg','width':'300','height':'262','viewBox':'0 0 300 262'})
  e.append(defs)
@@ -30,7 +35,7 @@ for name,svg in src['hero'].items():
 for g in ['🔦','🥕','🍯','🎨','🥁','🎸','🔭','🧭','🗺️','🏆','💎','🎈','🪁','🌟']:
  art=src['pictures'][g];inner=art[art.index('>')+1:art.rindex('</svg>')]
  # Full-size transparent layers keep hands aligned regardless of CSS aspect ratio.
- item='<svg xmlns="http://www.w3.org/2000/svg" width="300" height="262" viewBox="0 0 300 262"><svg x="207" y="177" width="42" height="42" viewBox="0 0 36 36">'+inner+'</svg></svg>'
+ item='<svg xmlns="http://www.w3.org/2000/svg" width="300" height="262" viewBox="0 0 300 262"><svg x="230" y="187" width="36" height="36" viewBox="0 0 36 36">'+inner+'</svg></svg>'
  layers['hand:'+g]=png(item,300,262)
 pictures={g:png(svg) for g,svg in src['pictures'].items()}
 js='/* Embedded PNG art. Twemoji graphics © Twitter, Inc and contributors, CC-BY 4.0; PICTURES-LICENSE.md. */\nconst GAME_PICTURES='+json.dumps(pictures,ensure_ascii=False,separators=(',',':'))+';\nconst TISHKA_LAYERS='+json.dumps(layers,separators=(',',':'))+';\n'
