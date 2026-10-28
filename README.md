@@ -53,7 +53,7 @@ git push -u origin main
 На любом из хостингов выше: **Domain settings → Add custom domain** → прописать CNAME у регистратора.
 Итог: `https://игра-лукошко.by` — HTTPS-сертификат выдаётся автоматически.
 
-> ⚠️ После любой правки уровней увеличивайте версию кеша в `sw.js` (`const CACHE = 'lukoshko-v2'`),
+> ⚠️ После любой правки уровней увеличивайте версию кеша в `sw.js` (`const CACHE = 'lukoshko-v4'`),
 > иначе у тех, кто уже играл, останется старая версия из офлайн-кеша.
 
 ---
@@ -154,8 +154,8 @@ GitHub Pages отдаёт сайт по адресу `/<репозиторий>/
 | `sw.js` | Service worker: офлайн-режим и кеш |
 | `icon.svg`, `icon-192.png`, `icon-512.png`, `apple-touch-icon.png`, `favicon-32.png` | Иконки |
 | `serve.py` | Локальный сервер для запуска одной командой |
-| `ДИЗАЙН.md` | Дизайн-документ: механики, 100 уровней, прогрессия, идеи |
-| `уровни.csv` | Все 100 уровней таблицей |
+| `ДИЗАЙН.md` | Дизайн-документ: механики, 200 уровней, прогрессия, идеи |
+| `уровни.csv` | Все 200 уровней таблицей (мир, название, типы заданий, ≈секунд) |
 | `lukoshko-site.zip` | Архив сайта для drag-and-drop деплоя |
 | `deploy.sh`, `publish-github.sh`, `netlify.toml`, `_headers`, `vercel.json` | Публикация: GitHub Pages / Netlify / Vercel |
 | `.nojekyll`, `.gitattributes`, `LICENSE` (MIT) | Служебное для GitHub Pages |
