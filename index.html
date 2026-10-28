@@ -229,7 +229,7 @@
 <!-- МЕНЮ -->
 <div class="screen" id="scrMenu">
   <div class="card">
-    <div class="mascot">🦔🧺</div>
+    <div class="mascot" id="menuMascot" style="width:150px;height:126px;margin:0 auto"></div>
     <h1>ЛУКОШКО</h1>
     <p class="sub" id="menuSub">Ёжик Тишка собирает знания · 200 уровней · 5+</p>
     <div class="rankBox" id="rankBox">
@@ -339,7 +339,7 @@
         <div class="aiTitle">Рекомендации по занятиям</div>
         <div id="aiOut" class="aiText">Загляну-ка в твои звёздочки…</div>
         <div class="aiFoot">
-          <button class="btn small" id="btnAiRefresh">Обновить рекомендацию</button>
+          <button class="btn small" id="btnAiRefresh">Показать рекомендацию</button>
           <span id="aiNote" class="aiNote"></span>
         </div>
     <div id="parentBody"></div>
@@ -350,6 +350,7 @@
 <button class="fab" id="btnHome" aria-label="В меню" title="В меню">🏠</button>
 <div id="toast"></div>
 
+<script src="pictures.js"></script>
 <script>
 "use strict";
 /* ============================================================
@@ -1198,132 +1199,46 @@ function spikesPath(){
   return d;
 }
 
-function heroSVG(o){
-  o = o || {};
-  const hat      = o.head === '🎩';
-  const crown    = o.head === '👑';
-  const glasses  = o.eyes === '🕶️';
-  const scarf    = o.neck === '🧣';
-  const mittens  = o.paws === '🧤';
-  const shoes    = o.feet === '👟';
-  const backpack = o.back === '🎒';
-  const item     = o.hand || '';
-  const held     = item ? '<text x="236" y="200" text-anchor="middle" font-size="42" class="handItem">'+item+'</text>' : '';
-
-  return '<svg class="tishkaSvg" viewBox="0 0 300 262" xmlns="'+SVG_NS+'" role="img" aria-label="Ёжик Тишка">' +
-  '<defs>'+
-    '<linearGradient id="tFur" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#c99a6a"/><stop offset="1" stop-color="#a87750"/></linearGradient>'+
-    '<linearGradient id="tBelly" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffeed3"/><stop offset="1" stop-color="#f6d3a8"/></linearGradient>'+
-    '<linearGradient id="tSpike" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#aa7858"/><stop offset="1" stop-color="#79513e"/></linearGradient>'+
-    '<linearGradient id="tGold" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffe37a"/><stop offset="1" stop-color="#e0a21c"/></linearGradient>'+
-    '<linearGradient id="tRed" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ef4b4b"/><stop offset="1" stop-color="#b8232a"/></linearGradient>'+
-    '<linearGradient id="tDenim" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7fb6ff"/><stop offset="1" stop-color="#2f6fd0"/></linearGradient>'+
-  '</defs>'+
-
-  /* мягкая тень на полу */
-  '<ellipse cx="150" cy="246" rx="82" ry="12" fill="rgba(120,80,40,.16)"/>'+
-
-  /* рюкзак — за спинкой */
-  (backpack ?
-    '<g class="bp">'+
-      '<rect x="72" y="134" width="156" height="104" rx="32" fill="#e07b39"/>'+
-      '<rect x="88" y="186" width="124" height="42" rx="19" fill="#c2601f"/>'+
-      '<circle cx="150" cy="207" r="7" fill="#f7c07a"/>'+
-    '</g>' : '')+
-
-  /* ножки и обувь */
-  '<rect x="124" y="198" width="21" height="24" rx="10" fill="url(#tFur)"/>'+
-  '<rect x="155" y="198" width="21" height="24" rx="10" fill="url(#tFur)"/>'+
-
-
-  /* туловище и иголки */
-  '<path d="'+spikesPath()+'" fill="url(#tSpike)"/>'+
-  '<ellipse cx="150" cy="172" rx="62" ry="56" fill="url(#tFur)"/>'+
-  '<ellipse cx="150" cy="188" rx="42" ry="34" fill="url(#tBelly)"/>'+
-  /* обувь — поверх, чтобы её было видно */
-  (shoes ?
-    '<g class="shoes">'+
-      '<path d="M120 214 q0 -8 9 -8 h14 q9 0 9 8 v8 q0 8 -9 8 h-14 q-9 0 -9 -8 z" fill="url(#tDenim)"/>'+
-      '<path d="M118 224 h34" stroke="#fff" stroke-width="3.5" stroke-linecap="round" opacity=".9"/>'+
-      '<path d="M148 214 q0 -8 9 -8 h14 q9 0 9 8 v8 q0 8 -9 8 h-14 q-9 0 -9 -8 z" fill="url(#tDenim)"/>'+
-      '<path d="M146 224 h34" stroke="#fff" stroke-width="3.5" stroke-linecap="round" opacity=".9"/>'+
-    '</g>' :
-    '<ellipse cx="130" cy="222" rx="19" ry="10" fill="url(#tBelly)"/>'+
-    '<ellipse cx="170" cy="222" rx="19" ry="10" fill="url(#tBelly)"/>')+
-
-  /* лапки */
-  '<ellipse cx="96" cy="190" rx="16" ry="26" fill="url(#tFur)" transform="rotate(14 96 190)"/>'+
-  '<ellipse cx="204" cy="190" rx="16" ry="26" fill="url(#tFur)" transform="rotate(-14 204 190)"/>'+
-  (mittens ?
-    '<g class="mittens">'+
-      '<ellipse cx="86" cy="200" rx="17" ry="15" fill="#ff6f91"/>'+
-      '<ellipse cx="74" cy="193" rx="7" ry="9" fill="#ff8fab" transform="rotate(-25 74 193)"/>'+
-      '<ellipse cx="214" cy="200" rx="17" ry="15" fill="#ff6f91"/>'+
-      '<ellipse cx="226" cy="193" rx="7" ry="9" fill="#ff8fab" transform="rotate(25 226 193)"/>'+
-    '</g>' :
-    '<ellipse cx="86" cy="202" rx="14" ry="12" fill="url(#tBelly)"/>'+
-    '<ellipse cx="214" cy="202" rx="14" ry="12" fill="url(#tBelly)"/>')+
-
-  /* голова */
-  '<circle cx="116" cy="104" r="15" fill="url(#tFur)"/><circle cx="116" cy="104" r="8" fill="#f0a9b3"/>'+
-  '<circle cx="184" cy="104" r="15" fill="url(#tFur)"/><circle cx="184" cy="104" r="8" fill="#f0a9b3"/>'+
-  '<ellipse cx="150" cy="132" rx="60" ry="53" fill="url(#tBelly)"/>'+
-  '<ellipse cx="121" cy="156" rx="12" ry="8" fill="#ffb3c1" opacity=".7"/>'+
-  '<ellipse cx="179" cy="156" rx="12" ry="8" fill="#ffb3c1" opacity=".7"/>'+
-  '<ellipse cx="131" cy="132" rx="11" ry="13" fill="#3b2a1e"/>'+
-  '<ellipse cx="169" cy="132" rx="11" ry="13" fill="#3b2a1e"/>'+
-  '<circle cx="128" cy="127" r="4" fill="#fff"/><circle cx="166" cy="127" r="4" fill="#fff"/>'+
-  '<circle cx="134" cy="137" r="1.7" fill="#fff" opacity=".8"/><circle cx="172" cy="137" r="1.7" fill="#fff" opacity=".8"/>'+
-  '<ellipse cx="150" cy="152" rx="8" ry="6" fill="#4a3123"/><ellipse cx="148" cy="150" rx="2.7" ry="1.6" fill="#fff" opacity=".65"/>'+
-  '<path d="M139 162 q11 10 22 0" stroke="#4a3123" stroke-width="3.4" fill="none" stroke-linecap="round"/>'+
-
-  /* лямки рюкзака — поверх, чтобы рюкзак «читался» */
-  (backpack ?
-    '<g class="straps">'+
-      '<path d="M118 138 q-16 28 -10 58" stroke="#b6561a" stroke-width="11" fill="none" stroke-linecap="round"/>'+
-      '<path d="M182 138 q16 28 10 58" stroke="#b6561a" stroke-width="11" fill="none" stroke-linecap="round"/>'+
-    '</g>' : '')+
-
-  /* шарф */
-  (scarf ?
-    '<g class="scarf">'+
-      '<path d="M102 171 q48 15 96 0 q10 -2 12 8 q2 10 -8 13 q-52 19 -104 0 q-10 -3 -8 -13 q2 -10 12 -8 z" fill="url(#tRed)"/>'+
-      '<path d="M202 184 q12 8 10 40 q-2 14 -12 11 q-7 -2 -5 -13 q2 -22 -5 -34 z" fill="#b8232a"/>'+
-      '<path d="M196 218 h12 M196 225 h12" stroke="#fff" stroke-width="3" opacity=".6" stroke-linecap="round"/>'+
-    '</g>' : '')+
-
-  /* очки */
-  (glasses ?
-    '<g class="glasses">'+
-      '<rect x="114" y="119" width="34" height="22" rx="9" fill="#2b2b33"/>'+
-      '<rect x="152" y="119" width="34" height="22" rx="9" fill="#2b2b33"/>'+
-      '<rect x="118" y="123" width="12" height="5" rx="2.5" fill="#7fd0ff" opacity=".65"/>'+
-      '<rect x="156" y="123" width="12" height="5" rx="2.5" fill="#7fd0ff" opacity=".65"/>'+
-      '<path d="M148 128 h4" stroke="#2b2b33" stroke-width="4"/>'+
-      '<path d="M114 128 q-8 2 -14 6 M186 128 q8 2 14 6" stroke="#2b2b33" stroke-width="3.5" fill="none" stroke-linecap="round"/>'+
-    '</g>' : '')+
-
-  /* шапка-цилиндр */
-  (hat ?
-    '<g class="hat" transform="rotate(-7 150 96)">'+
-      '<ellipse cx="150" cy="96" rx="52" ry="11" fill="#2b2b33"/>'+
-      '<path d="M118 96 L124 42 q26 -10 52 0 L182 96 z" fill="#33333d"/>'+
-      '<rect x="119" y="74" width="62" height="13" fill="url(#tRed)"/>'+
-      '<path d="M126 44 q24 -8 48 0" stroke="#4b4b57" stroke-width="4" fill="none"/>'+
-    '</g>' : '')+
-
-  /* корона */
-  (crown ?
-    '<g class="crown" transform="rotate(-5 150 96)">'+
-      '<path d="M112 96 l6 -40 l18 18 l14 -30 l14 30 l18 -18 l6 40 z" fill="url(#tGold)" stroke="#c98f14" stroke-width="2"/>'+
-      '<rect x="112" y="96" width="76" height="12" rx="6" fill="#e0a21c"/>'+
-      '<circle cx="150" cy="76" r="5" fill="#ff5d8f"/><circle cx="126" cy="82" r="4" fill="#5ad0ff"/><circle cx="174" cy="82" r="4" fill="#5ad0ff"/>'+
-    '</g>' : '')+
-
-  /* предмет в лапке */
-  (held || '')+
-
-  '</svg>';
+function heroSVG(o={}){
+  const hat=o.head==='🎩', crown=o.head==='👑', glasses=o.eyes==='🕶️', scarf=o.neck==='🧣';
+  const mittens=o.paws==='🧤', shoes=o.feet==='👟', backpack=o.back==='🎒';
+  const handArt=o.hand&&GAME_PICTURES[o.hand];
+  const held=handArt?`<svg x="213" y="178" width="42" height="42" viewBox="0 0 36 36">${handArt.replace(/<svg[^>]*>/,'').replace(/<\/svg>$/,'')}</svg>`:'';
+  return `<svg class="tishkaSvg" viewBox="0 0 300 262" xmlns="${SVG_NS}" role="img" aria-label="Ёжик Тишка боком">
+  <defs>
+   <linearGradient id="tSpike" x2=".3" y2="1"><stop stop-color="#b98159"/><stop offset="1" stop-color="#78513e"/></linearGradient>
+   <linearGradient id="tBelly" x2=".5" y2="1"><stop stop-color="#fff0d5"/><stop offset="1" stop-color="#ebbe8e"/></linearGradient>
+   <linearGradient id="tFur" x2="0" y2="1"><stop stop-color="#e4b580"/><stop offset="1" stop-color="#cb9566"/></linearGradient>
+  </defs>
+  <ellipse cx="150" cy="242" rx="100" ry="10" fill="#69412d" opacity=".13"/>
+  <ellipse cx="119" cy="219" rx="23" ry="12" fill="#ba8057"/>
+  <ellipse cx="180" cy="219" rx="25" ry="12" fill="#ba8057"/>
+  <path d="M63 205 Q34 170 45 135 L39 124 52 117 49 101 65 100 66 82 83 85 92 64 105 74 121 54 134 69 153 55 160 74 181 68 183 91 201 94 195 112 Q230 153 208 207Z" fill="url(#tSpike)"/>
+  <path d="M66 185 l-7 -12 m12 -28 -6 -10 m20 -30 1 -13 m23 -9 5 -12 m22 16 9 -8 m-62 67 1 -13 m20 38 5 -13" stroke="#ecc29c" stroke-width="4" opacity=".4" stroke-linecap="round"/>
+  ${backpack?`<g><rect x="48" y="132" width="67" height="78" rx="24" fill="#df8550" stroke="#ad5c34" stroke-width="3"/><rect x="53" y="170" width="51" height="29" rx="10" fill="#f7a15b"/><path d="M66 129 q7 -15 23 0" fill="none" stroke="#985533" stroke-width="5"/><circle cx="79" cy="182" r="4" fill="#ffe7a8"/></g>`:''}
+  <path d="M119 124 Q158 106 186 138 Q212 160 206 199 Q203 220 175 225 L115 223 Q91 212 96 186Z" fill="url(#tFur)"/>
+  <ellipse cx="158" cy="190" rx="38" ry="32" fill="url(#tBelly)"/>
+  <ellipse cx="186" cy="182" rx="15" ry="27" transform="rotate(-30 186 182)" fill="#dba573"/>
+  <ellipse cx="199" cy="201" rx="17" ry="13" transform="rotate(-20 199 201)" fill="${mittens?'#f486a6':'url(#tBelly)'}"/>
+  ${mittens?'<ellipse cx="210" cy="193" rx="6" ry="9" fill="#ffacc0"/>':''}
+  <ellipse cx="116" cy="211" rx="15" ry="10" fill="${mittens?'#f486a6':'#e8bb89'}"/>
+  ${shoes?`<g fill="#6c9ee3" stroke="#477bbf" stroke-width="2"><path d="M103 217 q-3 -14 14 -14 h13 q9 2 10 13 l8 4 q8 13 -9 15 h-28 q-13 0 -8 -18Z"/><path d="M163 217 q-3 -14 14 -14 h13 q9 2 10 13 l8 4 q8 13 -9 15 h-28 q-13 0 -8 -18Z"/></g><path d="M104 230 h39 m21 0 h39 M118 214 h12 m48 0 h12" stroke="#fff7e8" stroke-width="4" stroke-linecap="round"/>`:`<ellipse cx="124" cy="227" rx="24" ry="11" fill="url(#tBelly)"/><ellipse cx="184" cy="227" rx="26" ry="11" fill="url(#tBelly)"/>`}
+  ${backpack?'<path d="M119 137 Q155 167 136 200" stroke="#ae5e37" stroke-width="9" fill="none" stroke-linecap="round"/>':''}
+  <circle cx="149" cy="111" r="21" fill="#d6a06d"/><circle cx="150" cy="112" r="12" fill="#eaa899"/>
+  <path d="M158 103 Q189 88 207 117 Q213 130 239 140 Q251 150 237 159 Q211 176 184 174 Q157 176 145 154 Q130 129 158 103Z" fill="url(#tBelly)"/>
+  <ellipse cx="187" cy="130" rx="10" ry="13" fill="#422f2a"/>
+  <circle cx="184" cy="125" r="4" fill="white"/><circle cx="191" cy="135" r="2" fill="#fff5dd"/>
+  <path d="M179 111 q8 -4 14 1" fill="none" stroke="#b17c57" stroke-width="3" stroke-linecap="round"/>
+  <ellipse cx="181" cy="151" rx="13" ry="8" fill="#f3a6a0" opacity=".8"/>
+  <ellipse cx="240" cy="144" rx="10" ry="8" transform="rotate(-12 240 144)" fill="#49342e"/>
+  <ellipse cx="238" cy="141" rx="3" ry="2" fill="#fff3df"/>
+  <path d="M216 158 q-9 10 -16 5" stroke="#81523e" stroke-width="3" fill="none" stroke-linecap="round"/>
+  ${scarf?`<path d="M146 163 q16 13 46 8 l2 16 q-33 8 -55 -9Z" fill="#e66c64"/><path d="M151 180 q-9 21 6 39 l18 -6 q-13 -13 -8 -31Z" fill="#cf514e"/><path d="M155 204 l13 -4 m-10 11 14 -4" stroke="#ffdcaa" stroke-width="3"/>`:''}
+  ${glasses?`<path d="M142 121 l33 5" stroke="#344759" stroke-width="5"/><rect x="174" y="118" width="32" height="24" rx="9" fill="#344759"/><path d="M181 123 l12 1" stroke="#a5e3ec" stroke-width="4" stroke-linecap="round"/><path d="M205 126 l8 3" stroke="#344759" stroke-width="4"/>`:''}
+  ${hat?`<g transform="rotate(9 175 100)"><ellipse cx="175" cy="100" rx="41" ry="9" fill="#3c465b"/><path d="M149 99 l3 -43 q25 -10 48 0 l1 43Z" fill="#49536b"/><path d="M151 84 h49 v12 h-49Z" fill="#ef8b79"/></g>`:''}
+  ${crown?`<g transform="rotate(9 175 100)"><path d="M144 99 l-4 -34 20 13 14 -27 15 27 20 -13 -5 34Z" fill="#ffd46b" stroke="#d89e38" stroke-width="2"/><path d="M145 99 h59" stroke="#e6ac42" stroke-width="8" stroke-linecap="round"/><circle cx="175" cy="84" r="5" fill="#f08096"/></g>`:''}
+  ${held}
+  </svg>`;
 }
 
 function renderTishka(){
@@ -1449,6 +1364,25 @@ function resize(){
 }
 window.addEventListener('resize',resize);
 
+// Картинки заданий — встроенные SVG, а не зависящие от телефона символы.
+const pictureImages=new Map();
+const pictureKey=t=>String(t).replace(/\uFE0F/g,'');
+const picturesReady=Promise.all(Object.entries(GAME_PICTURES).map(([glyph,svg])=>new Promise(resolve=>{
+  const img=new Image();pictureImages.set(pictureKey(glyph),img);
+  img.onload=()=>resolve();img.onerror=()=>resolve();
+  img.src='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(svg);
+})));
+const systemFillText=ctx.fillText.bind(ctx);
+ctx.fillText=function(text,x,y,maxWidth){
+  const img=pictureImages.get(pictureKey(text));
+  if(!img)return maxWidth===undefined?systemFillText(text,x,y):systemFillText(text,x,y,maxWidth);
+  const size=parseFloat(this.font.match(/([\d.]+)px/)?.[1]||32);
+  const w=Math.min(size,maxWidth||size),h=w;
+  const left=this.textAlign==='center'?x-w/2:['right','end'].includes(this.textAlign)?x-w:x;
+  const top=this.textBaseline==='middle'?y-h/2:['top','hanging'].includes(this.textBaseline)?y:y-h*.85;
+  if(img.complete&&img.naturalWidth){this.drawImage(img,left,top,w,h);return;}
+  this.save();this.fillStyle='#e1a844';this.beginPath();this.arc(left+w/2,top+h/2,w*.22,0,Math.PI*2);this.fill();this.restore();
+};
 const EMOJI_FONT='"Segoe UI Emoji","Apple Color Emoji","Noto Color Emoji","EmojiOne Color",sans-serif';
 function emoji(txt,size){ ctx.font=size+'px '+EMOJI_FONT; return txt; }
 const rnd=(a,b)=>a+Math.random()*(b-a);
@@ -2496,6 +2430,7 @@ function showScreen(id){
 }
 
 function renderMenu(){
+  document.getElementById('menuMascot').innerHTML=heroSVG(outfit());
   const st=totalStars(), rk=rankFor(st), nx=nextRank(st);
   document.getElementById('rankName').textContent = rk.e+'  '+rk.n;
   const from=rk.s, to=nx?nx.s:MAX_STARS;
@@ -2538,7 +2473,8 @@ function renderMap(){
 
 function showResult(stars, passed){
   const lv=G.level;
-  document.getElementById('resMascot').textContent = stars===3? '🦔🌟' : stars===2? '🦔😊' : '🦔💪';
+  document.getElementById('resMascot').innerHTML=heroSVG(outfit());
+  document.getElementById('resMascot').style.cssText='width:150px;height:126px;margin:0 auto';
   document.getElementById('resTitle').textContent = stars===3? 'Великолепно!' : stars===2? 'Хорошо!' : 'Неплохо!';
   const row=document.getElementById('starsRow');
   row.innerHTML='';
@@ -2812,59 +2748,29 @@ async function aiFetchAdvice(prompt, ms){
   }finally{clearTimeout(timer)}
 }
 
-/* ---- совет в родительском уголке: появляется сам при входе ---- */
-async function loadParentAdvice(force){
-  const out=document.getElementById('aiOut');
-  const note=document.getElementById('aiNote');
-  if(!out) return;
-  const cached = save.aiAdvice;
-  const playedNow=(save.roundLog||[]).length;
-  const fresh = cached && cached.provider==='gemini' && (playedNow - (cached.rounds||0) < 3);
-  if(!force && cached && cached.text && fresh){
-    out.textContent = cached.text;
-    note.textContent = cached.when || '';
-    return;
+/* Один запрос на одну загрузку страницы; все экраны используют тот же Promise. */
+let pageAdvicePromise=null;
+function pageAdvice(){
+  if(!pageAdvicePromise){
+    const fallback=localAdvice();
+    pageAdvicePromise=aiFetchAdvice('',30000).then(text=>{
+      const when='Сформировано в '+new Date().toLocaleTimeString('ru-RU',{hour:'2-digit',minute:'2-digit'});
+      save.aiAdvice={text,provider:'gemini',rounds:(save.roundLog||[]).length,when};persist();
+      return {text,when};
+    }).catch(()=>({text:fallback,when:'Рекомендация составлена по данным игры (без подключения к сети).'}));
   }
-  // 1) сразу показываем тёплый совет, чтобы экран не был пустым
-  out.textContent = localAdvice();
-  note.textContent = 'Формируем рекомендацию по данным последних занятий…';
-  // 2) и подменяем его на живой, когда он придёт
-  try{
-    const prompt = aiPromptFacts() +
-      'Напиши родителю короткий совет: что у малыша уже получается, что потренировать завтра и как это сделать дома.';
-    const txt = await aiFetchAdvice(prompt, 70000);
-    save.aiAdvice = {text:txt, provider:'gemini', rounds:(save.roundLog||[]).length,
-      when:'Сформировано в '+new Date().toLocaleTimeString('ru-RU',{hour:'2-digit',minute:'2-digit'})};
-    persist();
-    if(document.getElementById('aiOut')===out && !document.getElementById('scrParent').classList.contains('hidden')){
-      out.textContent = txt;
-      note.textContent = save.aiAdvice.when;
-    }
-  }catch(e){
-    note.textContent = 'Рекомендация составлена по данным игры (без подключения к сети).';
-  }
+  return pageAdvicePromise;
 }
-
-/* ---- совет на экране результата ---- */
+async function loadParentAdvice(){
+  const out=document.getElementById('aiOut'),note=document.getElementById('aiNote');
+  if(!out)return;
+  out.textContent=localAdvice();note.textContent='Готовим рекомендацию…';
+  const advice=await pageAdvice();out.textContent=advice.text;note.textContent=advice.when;
+}
 async function aiAdviceForLevel(){
-  const btn=document.getElementById('btnAiLevel');
-  const box=document.getElementById('resAi');
-  if(!box) return;
-  const lv=G.level;
-  if(!lv) return;
-  box.style.display='block';
-  box.textContent = localAdvice();
-  btn.disabled=true;
-  const secs=Math.round((performance.now()-G.levelT0)/1000);
-  const stars=G.errs<=1?3:G.errs<=4?2:1;
-  try{
-    const prompt='Малыш только что прошёл уровень «'+lv.t+'» (мир «'+((WORLDS[lv.w]||{}).name)+'») за '+
-      secs+' '+plural(secs,'секунду','секунды','секунд')+', ошибок '+G.errs+', заработал '+stars+' '+
-      plural(stars,'звезду','звезды','звёзд')+'. ' + aiPromptFacts() +
-      ' Напиши ребёнку и родителю 3-4 предложения: что сегодня получилось и что попробовать завтра.';
-    box.textContent = await aiFetchAdvice(prompt, 70000);
-  }catch(e){ /* остаётся встроенный совет */ }
-  btn.disabled=false;
+  const box=document.getElementById('resAi'),btn=document.getElementById('btnAiLevel');
+  if(!box)return;box.style.display='block';box.textContent=localAdvice();if(btn)btn.disabled=true;
+  const advice=await pageAdvice();box.textContent=advice.text;if(btn)btn.disabled=false;
 }
 
 function bindAiUI(){
@@ -2946,6 +2852,7 @@ resize();
 document.getElementById('btnSound').textContent = save.sound?'🔊':'🔇';
 renderMenu();
 showScreen('scrMenu');
+loadParentAdvice(); // начинаем ровно один раз сразу при открытии страницы
 requestAnimationFrame(loop);
 
 /* ---------- PWA: офлайн-режим и установка ---------- */
