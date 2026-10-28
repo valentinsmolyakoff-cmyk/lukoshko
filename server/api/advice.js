@@ -29,10 +29,10 @@ module.exports=async(req,res)=>{
  if(!/^[a-z0-9.-]+$/.test(model))return send(503,{error:'configuration'});
  try{
   const response=await fetch('https://generativelanguage.googleapis.com/v1beta/models/'+model+':generateContent',{method:'POST',headers:{'Content-Type':'application/json','x-goog-api-key':process.env.GEMINI_API_KEY},body:JSON.stringify({systemInstruction:{parts:[{text:system}]},contents:[{parts:[{text:JSON.stringify(facts)}]}],generationConfig:{maxOutputTokens:600,temperature:0.65}}),signal:AbortSignal.timeout(25000)});
-  if(!response.ok)return send(response.status===429?429:502,{error:'provider_unavailable'});
+  if(!response.ok)return send(response.status===429?429:502,{error:'provider_unavailable',upstreamStatus:response.status});
   const data=await response.json();
   const text=(data.candidates?.[0]?.content?.parts||[]).filter(p=>!p.thought).map(p=>p.text||'').join('').replace(/\s+/g,' ').trim();
   if(text.length<60||text.length>1000||/[A-Za-z]{4,}|[*#`]|\d\s*%/.test(text))return send(502,{error:'invalid_response'});
   if(cache.size>=250)cache.delete(cache.keys().next().value);cache.set(key,{at:now,text});return send(200,{text});
- }catch{return send(502,{error:'provider_unavailable'})}
+ }catch(e){return send(502,{error:'provider_unavailable',reason:e.name==='TimeoutError'?'timeout':'network'})}
 };
