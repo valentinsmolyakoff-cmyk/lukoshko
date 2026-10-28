@@ -2,7 +2,7 @@ const {createHash}=require('node:crypto');
 const skills=['Внимание и реакция','Буквы и чтение','Счёт','Память','Логика и обобщение','Закономерности','Знания о мире','Мелкая моторика','Чувство ритма'];
 const buckets=new Map(), cache=new Map();
 const num=(v,max)=>Number.isInteger(v)&&v>=0&&v<=max;
-const system='Ты помогаешь родителю ребёнка 5–6 лет выбрать короткое совместное занятие по результатам игры «Лукошко». Пиши по-русски, тепло, естественно, без сюсюканья и канцелярита. Ровно 3–4 предложения, 45–85 слов, один абзац без списков, заголовков, латиницы, эмодзи и процентов. Только сведения из данных; не приписывай ребёнку эмоции, черты характера, причины ошибок, диагнозы или возрастные нормы. Обращайся к родителю, а не к ребёнку: не пиши «вы справляетесь» о детском результате. Не говори, что лично наблюдал ребёнка. Переданные номера уровней — только рекомендации для следующего занятия, а не сведения о пройденных уровнях. Сначала конкретно отметь, что получается, затем осторожно назови навык для практики и предложи одно понятное упражнение дома на пять минут. Укажи один из переданных уровней, если они есть. Если данных мало, не делай выводов о навыках, предложи знакомство с игрой. Не называй навыки сформированными: это только игровые результаты.';
+const system='Значение played — число пройденных уровней, stars — сумма звёзд, skills содержит игровые навыки, pct — доля верных действий, tot — число действий. Не называй уровни сессиями. Выводы о навыке делай только при tot не менее 8. Ты помогаешь родителю ребёнка 5–6 лет выбрать короткое совместное занятие по результатам игры «Лукошко». Пиши по-русски, тепло, естественно, без сюсюканья и канцелярита. Ровно 3–4 предложения, 45–85 слов, один абзац без списков, заголовков, латиницы, эмодзи и процентов. Только сведения из данных; не приписывай ребёнку эмоции, черты характера, причины ошибок, диагнозы или возрастные нормы. Обращайся к родителю, а не к ребёнку: не пиши «вы справляетесь» о детском результате. Не говори, что лично наблюдал ребёнка. Переданные номера уровней — только рекомендации для следующего занятия, а не сведения о пройденных уровнях. Сначала конкретно отметь, что получается, затем осторожно назови навык для практики и предложи одно понятное упражнение дома на пять минут. Укажи один из переданных уровней, если они есть. Если данных мало, не делай выводов о навыках, предложи знакомство с игрой. Не называй навыки сформированными: это только игровые результаты.';
 module.exports=async(req,res)=>{
  const origin=req.headers.origin;
  const allowed=(process.env.ALLOWED_ORIGINS||'https://valentinsmolyakoff-cmyk.github.io').split(',');
@@ -28,7 +28,17 @@ module.exports=async(req,res)=>{
  const model=process.env.GEMINI_MODEL||'gemini-3.1-flash-lite';
  if(!/^[a-z0-9.-]+$/.test(model))return send(503,{error:'configuration'});
  try{
-  const response=await fetch('https://generativelanguage.googleapis.com/v1beta/models/'+model+':generateContent',{method:'POST',headers:{'Content-Type':'application/json','x-goog-api-key':process.env.GEMINI_API_KEY},body:JSON.stringify({systemInstruction:{parts:[{text:system}]},contents:[{parts:[{text:JSON.stringify(facts)}]}],generationConfig:{maxOutputTokens:600,temperature:0.65}}),signal:AbortSignal.timeout(25000)});
+  const deadline=Date.now()+25500;
+  const requestBody=JSON.stringify({systemInstruction:{parts:[{text:system}]},contents:[{parts:[{text:JSON.stringify(facts)}]}],generationConfig:{maxOutputTokens:600,temperature:0.65}});
+  let response;
+  for(let attempt=0;attempt<2;attempt++){
+    response=await fetch('https://generativelanguage.googleapis.com/v1beta/models/'+model+':generateContent',{
+      method:'POST',headers:{'Content-Type':'application/json','x-goog-api-key':process.env.GEMINI_API_KEY},
+      body:requestBody,signal:AbortSignal.timeout(Math.max(1000,deadline-Date.now()))});
+    if(response.ok || ![502,503].includes(response.status) || attempt===1 || Date.now()+2000>=deadline)break;
+    await response.body?.cancel();
+    await new Promise(resolve=>setTimeout(resolve,1000));
+  }
   if(!response.ok)return send(response.status===429?429:502,{error:'provider_unavailable',upstreamStatus:response.status});
   const data=await response.json();
   const text=(data.candidates?.[0]?.content?.parts||[]).filter(p=>!p.thought).map(p=>p.text||'').join('').replace(/\s+/g,' ').trim();

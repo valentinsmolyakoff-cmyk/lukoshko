@@ -23,6 +23,9 @@ async function call(body,extra={}){
  assert.equal((await call(valid)).status,200);
  global.fetch=async()=>({ok:false,status:429});
  assert.equal((await call({...valid,played:9})).status,429);
+ let attempts=0;
+ global.fetch=async()=>{attempts++;return attempts===1?{ok:false,status:503,body:{cancel:async()=>{}}}:{ok:true,json:async()=>({candidates:[{content:{parts:[{text:'В заданиях на память ребёнок часто находит верную пару. Предложите пройти простой лабиринт пальцем, останавливаясь на каждом повороте. Через пять минут можно попробовать уровень 29.'}]}}]})}};
+ assert.equal((await call({...valid,played:11})).status,200);assert.equal(attempts,2);
  global.fetch=real;
  if(process.env.LIVE_TEST==='1'){
   const r=await call({...valid,played:10});assert.equal(r.status,200,JSON.stringify(r));console.log('LIVE Gemini:',r.body.text);
