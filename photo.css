@@ -1,0 +1,86 @@
+/* Лукошко — фотореалистичное оформление.
+   Подключается после основных стилей: фотофоны, бумажные поверхности, читаемый текст.
+   Картинки предметов встроены в index.html (offline), фоны лежат рядом в assets/photo. */
+/* Photographic prototype: opaque text surfaces, natural tactile materials. */
+:root{--ink:#303c2c;--muted:#5c604d;--paper:#fcf8ed;--forest:#3c5534;--edge:#d4c6aa;--photo-forest:url("assets/photo/forest-web.jpg");--photo-house:url("assets/photo/house-web.jpg");--photo-table:url("assets/photo/table-web.jpg");}
+html,body{font-family:"Segoe UI",system-ui,sans-serif;background:#30432d;color:var(--ink)}
+.screen{background:linear-gradient(#172a1930,#172a1960),var(--photo-forest) center/cover;padding:24px 18px}
+.card{background:var(--paper);border:1px solid #e2d5bb;border-radius:24px;box-shadow:0 22px 70px #14220e80;padding:22px 24px;color:var(--ink)}
+h1,h2,.bigscore{color:var(--ink)}h1{letter-spacing:.12em;font-size:clamp(32px,6vw,46px);font-weight:850}
+p.sub,.tiny,.skNote,.dayHead,.parentLink{color:var(--muted)}
+.btn{background:linear-gradient(#4f6b42,#354c2e);color:#fffced;box-shadow:0 4px 0 #23371e,0 6px 12px #25331d22;border:1px solid #57724b;border-radius:15px;font-weight:750;padding:13px 27px;letter-spacing:.01em}
+.btn.blue,.btn.pink{background:linear-gradient(#fff9eceb,#f3e9d3ed),var(--photo-table) center/cover;color:#35432e;border-color:#cebd9b;box-shadow:0 4px 0 #baa785,0 6px 12px #25331d18}
+.btn:active,.btn.blue:active,.btn.pink:active{box-shadow:0 1px 0 #95876b;transform:translateY(3px)}
+.btn:disabled{opacity:1;background:#e2ded1;color:#555749;border-color:#c5bda9;box-shadow:0 4px 0 #b7ad98}
+.btn.small{border-radius:12px}
+#scrMenu .card{max-width:670px;padding:0 26px 22px;overflow:hidden}
+.menuLandscape{position:relative;height:235px;margin:0 -26px 18px;background:var(--photo-forest) center 62%/cover;isolation:isolate}
+.menuLandscape:after{content:'';position:absolute;bottom:0;inset-inline:0;height:75px;background:linear-gradient(transparent,#14230a30);z-index:-1}
+.landscapeLabel{position:absolute;top:18px;left:50%;transform:translateX(-50%);white-space:nowrap;font-size:10px;font-weight:750;letter-spacing:.13em;padding:8px 11px;border:1px solid #e8dec4;background:#fcf8ed;color:#465238;border-radius:7px}
+#menuMascot{position:absolute;bottom:-20px;left:50%;transform:translateX(-50%);width:330px;height:288px;margin:0;filter:drop-shadow(0 10px 6px #18200c44)}
+#scrMenu p.sub{font-size:14px;margin-bottom:18px}
+#scrMenu .rankBox{display:grid;grid-template-columns:1fr;gap:1px;text-align:left;margin:0 0 20px;padding:14px 16px;border:1px solid var(--edge);border-radius:15px;background:#f0ead9;color:#57502e}
+.rankBar{height:9px;background:#fffdf5;margin-top:7px}.rankBar div{background:linear-gradient(90deg,#a98b41,#6e793e)}
+#rankName{font-size:16px;color:#3f4a2d}#rankInfo{color:#605330}
+.dayHead{text-align:left;font-size:11px;letter-spacing:.13em}.dayBox{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:18px}.dayChip{width:100%;max-width:none;min-height:65px;padding:10px;border:1px solid #d8ccb4;border-radius:12px;background:#fffcf4;color:#4a513c;font-size:12px;box-shadow:0 3px 8px #433b2010}
+.dayChip.done{background:#e9efdf;border-color:#98a77c;color:#355128}
+#scrMenu .row:first-of-type{display:flex}#btnPlay{min-width:165px}#btnMap{font-size:17px}#btnHouse{font-size:15px}#scrMenu .tiny{font-size:11px;margin-top:16px;line-height:1.5}
+.mapHead{background:var(--paper);border-color:#dfd3bb}.world{background:#f3eddf;border:1px solid #e1d5be;border-radius:17px;box-shadow:0 3px 10px #3d331413}.world h3{color:#3e4b33}.tile{background:#fffcf4;border:1px solid #dfd2b6;box-shadow:0 3px 0 #cbbd9d;color:#3d4930;border-radius:12px}.tile.boss{background:#f3e4b9}.tile.locked{background:#e9e6dd;color:#5e5e51;box-shadow:0 3px 0 #cbc6b8}.tile.locked .st{color:#68614d}.tile .st{color:#78561e}
+#scrHouse{background:linear-gradient(#2f261b40,#251d1560),var(--photo-house) center/cover}
+#tishkaScene{width:min(600px,100%);aspect-ratio:6/4;background:var(--photo-house) center 72%/cover;box-shadow:inset 0 0 0 1px #79644250;border-radius:18px;overflow:hidden;margin:12px auto}
+#tishkaScene .ground{display:none}#tishkaBody{inset:auto 8% -7%;height:auto;aspect-ratio:300/262;filter:drop-shadow(0 7px 4px #32261655)}
+#tishkaName{color:#5d4b30}.hItem{background:#fffcf4;border:1px solid #dfd2b6;border-radius:13px;box-shadow:0 3px 0 #cbbd9d}.hItem .n,.hItem .need,.hItem .slot{color:#5b5846}.hItem.locked{background:#eae7de}.hItem.locked .n,.hItem.locked .need{color:#615e51}.hItem.on{outline:3px solid #81965b;background:#f4f4df}
+.aiCard{background:#f2eddd;border:1px solid #c9bd9e;border-radius:16px;padding:19px}.aiTitle{color:#3d5133}.aiText{color:#35412f}.aiNote{color:#605a46}.sbar{background:#e4dfd1}.sbar div{background:linear-gradient(90deg,#9aae74,#5e7d47)}.skillRow .t{color:#3e4835}.stat{background:#f1ebdd;border:1px solid #e0d2b8}.stat .num{color:#425532}.stat .lbl{color:#5c604c}
+#scrResult .card{max-width:640px}.rankLine{color:#69532e}#resAi{background:#f1eddf;border:1px solid #d1c3a5;color:#3b4831}
+#hud .pill,#promptBox{background:#fffcf4;color:#35432d;border:1px solid #d8c8a5;box-shadow:0 3px 9px #27331922}#bar{background:#f5eddd}#barFill{background:linear-gradient(90deg,#9aae74,#5e7d47)}
+#btnSay,.fab{background:linear-gradient(#f9f0d9,#e2d0a6);border:1px solid #bcaa82;box-shadow:0 3px 0 #a18f68}
+#lvlIntro .box{background:#fffcf4;border:1px solid #d8c8a5;border-radius:18px;box-shadow:0 15px 50px #172a1980}#lvlIntro .num,#lvlIntro .ttl,#lvlIntro .wrld{color:#3d5032}
+#toast{color:#35432d;background:#fffaf0;border:1px solid #d3c39f}
+@media(max-width:480px){.screen{padding:12px}.card{padding:18px}.menuLandscape{height:205px}#scrMenu .card{padding:0 20px 18px}.menuLandscape{margin-inline:-20px}#menuMascot{width:300px;height:262px}.landscapeLabel{font-size:8px;top:14px}.dayBox{gap:6px}.dayChip{padding:8px 6px;font-size:11px;min-height:68px}#btnPlay{min-width:142px}#btnMap{font-size:15px;padding-inline:15px}#scrMenu .rankBox{margin-bottom:15px}#scrMenu p.sub{font-size:12px}#scrMenu .row{gap:3px}#tishkaScene{aspect-ratio:1.2}#tishkaBody{inset-inline:0;bottom:-3%}.mapHead{top:-18px}}
+@media(min-width:800px){.menuLandscape{height:285px}#menuMascot{width:400px;height:349px}.dayChip{font-size:13px}#scrMenu .card{padding-inline:38px}.menuLandscape{margin-inline:-38px}}
+/* Лукошко — фотореалистичное оформление.
+   Подключается после основных стилей: фотофоны, бумажные поверхности, читаемый текст.
+   Картинки предметов встроены в index.html (offline), фоны лежат рядом в assets/photo. */
+/* Photographic prototype: opaque text surfaces, natural tactile materials. */
+:root{--ink:#303c2c;--muted:#5c604d;--paper:#fcf8ed;--forest:#3c5534;--edge:#d4c6aa;--photo-forest:url("assets/photo/forest-web.jpg");--photo-house:url("assets/photo/house-web.jpg");--photo-table:url("assets/photo/table-web.jpg");}
+html,body{font-family:"Segoe UI",system-ui,sans-serif;background:#30432d;color:var(--ink)}
+.screen{background:linear-gradient(#172a1930,#172a1960),var(--photo-forest) center/cover;padding:24px 18px}
+.card{background:var(--paper);border:1px solid #e2d5bb;border-radius:24px;box-shadow:0 22px 70px #14220e80;padding:22px 24px;color:var(--ink)}
+h1,h2,.bigscore{color:var(--ink)}h1{letter-spacing:.12em;font-size:clamp(32px,6vw,46px);font-weight:850}
+p.sub,.tiny,.skNote,.dayHead,.parentLink{color:var(--muted)}
+.btn{background:linear-gradient(#4f6b42,#354c2e);color:#fffced;box-shadow:0 4px 0 #23371e,0 6px 12px #25331d22;border:1px solid #57724b;border-radius:15px;font-weight:750;padding:13px 27px;letter-spacing:.01em}
+.btn.blue,.btn.pink{background:linear-gradient(#fff9eceb,#f3e9d3ed),var(--photo-table) center/cover;color:#35432e;border-color:#cebd9b;box-shadow:0 4px 0 #baa785,0 6px 12px #25331d18}
+.btn:active,.btn.blue:active,.btn.pink:active{box-shadow:0 1px 0 #95876b;transform:translateY(3px)}
+.btn:disabled{opacity:1;background:#e2ded1;color:#555749;border-color:#c5bda9;box-shadow:0 4px 0 #b7ad98}
+.btn.small{border-radius:12px}
+#scrMenu .card{max-width:670px;padding:0 26px 22px;overflow:hidden}
+.menuLandscape{position:relative;height:235px;margin:0 -26px 18px;background:var(--photo-forest) center 62%/cover;isolation:isolate}
+.menuLandscape:after{content:'';position:absolute;bottom:0;inset-inline:0;height:75px;background:linear-gradient(transparent,#14230a30);z-index:-1}
+.landscapeLabel{position:absolute;top:18px;left:50%;transform:translateX(-50%);white-space:nowrap;font-size:10px;font-weight:750;letter-spacing:.13em;padding:8px 11px;border:1px solid #e8dec4;background:#fcf8ed;color:#465238;border-radius:7px}
+#menuMascot{position:absolute;bottom:-20px;left:50%;transform:translateX(-50%);width:330px;height:288px;margin:0;filter:drop-shadow(0 10px 6px #18200c44)}
+#scrMenu p.sub{font-size:14px;margin-bottom:18px}
+#scrMenu .rankBox{display:grid;grid-template-columns:1fr;gap:1px;text-align:left;margin:0 0 20px;padding:14px 16px;border:1px solid var(--edge);border-radius:15px;background:#f0ead9;color:#57502e}
+.rankBar{height:9px;background:#fffdf5;margin-top:7px}.rankBar div{background:linear-gradient(90deg,#a98b41,#6e793e)}
+#rankName{font-size:16px;color:#3f4a2d}#rankInfo{color:#605330}
+.dayHead{text-align:left;font-size:11px;letter-spacing:.13em}.dayBox{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:18px}.dayChip{width:100%;max-width:none;min-height:65px;padding:10px;border:1px solid #d8ccb4;border-radius:12px;background:#fffcf4;color:#4a513c;font-size:12px;box-shadow:0 3px 8px #433b2010}
+.dayChip.done{background:#e9efdf;border-color:#98a77c;color:#355128}
+#scrMenu .row:first-of-type{display:flex}#btnPlay{min-width:165px}#btnMap{font-size:17px}#btnHouse{font-size:15px}#scrMenu .tiny{font-size:11px;margin-top:16px;line-height:1.5}
+.mapHead{background:var(--paper);border-color:#dfd3bb}.world{background:#f3eddf;border:1px solid #e1d5be;border-radius:17px;box-shadow:0 3px 10px #3d331413}.world h3{color:#3e4b33}.tile{background:#fffcf4;border:1px solid #dfd2b6;box-shadow:0 3px 0 #cbbd9d;color:#3d4930;border-radius:12px}.tile.boss{background:#f3e4b9}.tile.locked{background:#e9e6dd;color:#5e5e51;box-shadow:0 3px 0 #cbc6b8}.tile.locked .st{color:#68614d}.tile .st{color:#78561e}
+#scrHouse{background:linear-gradient(#2f261b40,#251d1560),var(--photo-house) center/cover}
+#tishkaScene{width:min(600px,100%);aspect-ratio:6/4;background:var(--photo-house) center 72%/cover;box-shadow:inset 0 0 0 1px #79644250;border-radius:18px;overflow:hidden;margin:12px auto}
+#tishkaScene .ground{display:none}#tishkaBody{inset:auto 8% -7%;height:auto;aspect-ratio:300/262;filter:drop-shadow(0 7px 4px #32261655)}
+#tishkaName{color:#5d4b30}.hItem{background:#fffcf4;border:1px solid #dfd2b6;border-radius:13px;box-shadow:0 3px 0 #cbbd9d}.hItem .n,.hItem .need,.hItem .slot{color:#5b5846}.hItem.locked{background:#eae7de}.hItem.locked .n,.hItem.locked .need{color:#615e51}.hItem.on{outline:3px solid #81965b;background:#f4f4df}
+.aiCard{background:#f2eddd;border:1px solid #c9bd9e;border-radius:16px;padding:19px}.aiTitle{color:#3d5133}.aiText{color:#35412f}.aiNote{color:#605a46}.sbar{background:#e4dfd1}.sbar div{background:linear-gradient(90deg,#9aae74,#5e7d47)}.skillRow .t{color:#3e4835}.stat{background:#f1ebdd;border:1px solid #e0d2b8}.stat .num{color:#425532}.stat .lbl{color:#5c604c}
+#scrResult .card{max-width:640px}.rankLine{color:#69532e}#resAi{background:#f1eddf;border:1px solid #d1c3a5;color:#3b4831}
+#hud .pill,#promptBox{background:#fffcf4;color:#35432d;border:1px solid #d8c8a5;box-shadow:0 3px 9px #27331922}#bar{background:#f5eddd}#barFill{background:linear-gradient(90deg,#9aae74,#5e7d47)}
+#btnSay,.fab{background:linear-gradient(#f9f0d9,#e2d0a6);border:1px solid #bcaa82;box-shadow:0 3px 0 #a18f68}
+#lvlIntro .box{background:#fffcf4;border:1px solid #d8c8a5;border-radius:18px;box-shadow:0 15px 50px #172a1980}#lvlIntro .num,#lvlIntro .ttl,#lvlIntro .wrld{color:#3d5032}
+#toast{color:#35432d;background:#fffaf0;border:1px solid #d3c39f}
+@media(max-width:480px){.screen{padding:12px}.card{padding:18px}.menuLandscape{height:205px}#scrMenu .card{padding:0 20px 18px}.menuLandscape{margin-inline:-20px}#menuMascot{width:300px;height:262px}.landscapeLabel{font-size:8px;top:14px}.dayBox{gap:6px}.dayChip{padding:8px 6px;font-size:11px;min-height:68px}#btnPlay{min-width:142px}#btnMap{font-size:15px;padding-inline:15px}#scrMenu .rankBox{margin-bottom:15px}#scrMenu p.sub{font-size:12px}#scrMenu .row{gap:3px}#tishkaScene{aspect-ratio:1.2}#tishkaBody{inset-inline:0;bottom:-3%}.mapHead{top:-18px}}
+@media(min-width:800px){.menuLandscape{height:285px}#menuMascot{width:400px;height:349px}.dayChip{font-size:13px}#scrMenu .card{padding-inline:38px}.menuLandscape{margin-inline:-38px}}
+
+/* Предмет в инструкции задания показываем фотографией, а не пиктограммой. */
+.promptPhoto{height:1.5em;width:1.5em;object-fit:contain;vertical-align:-.38em;margin:0 .08em;filter:drop-shadow(0 1px 1px rgba(40,50,30,.25))}
+#resMascot{width:250px;height:218px;margin:0 auto}
+#resMascot svg,#resMascot .tishkaArt{width:100%;height:100%}
+.hItem .n,.hItem .need{text-transform:none}

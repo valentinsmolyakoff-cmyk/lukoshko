@@ -1,7 +1,7 @@
 /* Лукошко — service worker.
    Задача: игра открывается даже без интернета (планшет в машине, слабый Wi-Fi в саду).
    При обновлении игры поменяйте номер версии в CACHE — старый кеш удалится сам. */
-const CACHE = 'lukoshko-v18';
+const CACHE = 'lukoshko-v19';
 const FILES = [
   './',
   './index.html',
@@ -10,7 +10,13 @@ const FILES = [
   './icon-192.png',
   './icon-512.png',
   './apple-touch-icon.png',
-  './favicon-32.png'
+  './favicon-32.png',
+  './photo.css',
+  './photo.js',
+  './photo-materials.js',
+  './assets/photo/forest-web.jpg',
+  './assets/photo/table-web.jpg',
+  './assets/photo/house-web.jpg'
 ];
 
 self.addEventListener('install', e => {
