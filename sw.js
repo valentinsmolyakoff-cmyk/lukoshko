@@ -1,7 +1,7 @@
 /* Лукошко — service worker.
    Задача: игра открывается даже без интернета (планшет в машине, слабый Wi-Fi в саду).
    При обновлении игры поменяйте номер версии в CACHE — старый кеш удалится сам. */
-const CACHE = 'lukoshko-v16';
+const CACHE = 'lukoshko-v17';
 const FILES = [
   './',
   './index.html',
@@ -28,8 +28,8 @@ self.addEventListener('activate', e => {
     const windows=await self.clients.matchAll({type:'window',includeUncontrolled:true});
     await Promise.all(windows.map(async client=>{
       const u=new URL(client.url);
-      if(u.origin===self.location.origin&&u.pathname.startsWith(scope)&&u.searchParams.get('build')!=='16'){
-        u.searchParams.set('build','16');client.navigate(u.href).catch(()=>{});
+      if(u.origin===self.location.origin&&u.pathname.startsWith(scope)&&u.searchParams.get('build')!=='17'){
+        u.searchParams.set('build','17');client.navigate(u.href).catch(()=>{});
       }
     }));
   })());

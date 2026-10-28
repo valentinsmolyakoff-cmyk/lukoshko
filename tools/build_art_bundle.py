@@ -35,8 +35,13 @@ for name,svg in src['hero'].items():
 for g in ['🔦','🥕','🍯','🎨','🥁','🎸','🔭','🧭','🗺️','🏆','💎','🎈','🪁','🌟']:
  art=src['pictures'][g];inner=art[art.index('>')+1:art.rindex('</svg>')]
  # Full-size transparent layers keep hands aligned regardless of CSS aspect ratio.
- item='<svg xmlns="http://www.w3.org/2000/svg" width="300" height="262" viewBox="0 0 300 262"><svg x="244" y="207" width="29" height="29" viewBox="0 0 36 36">'+inner+'</svg></svg>'
+ item='<svg xmlns="http://www.w3.org/2000/svg" width="300" height="262" viewBox="0 0 300 262"><svg x="206" y="208" width="28" height="28" viewBox="0 0 36 36">'+inner+'</svg></svg>'
  layers['hand:'+g]=png(item,300,262)
+photo=root/'tools/tishka-photo.png'
+if photo.exists():
+ layers['base']='data:image/png;base64,'+base64.b64encode(photo.read_bytes()).decode()
+ transparent=layer([])
+ layers['paws']=transparent;layers['feet']=transparent
 pictures={g:png(svg) for g,svg in src['pictures'].items()}
 js='/* Embedded PNG art. Twemoji graphics © Twitter, Inc and contributors, CC-BY 4.0; PICTURES-LICENSE.md. */\nconst GAME_PICTURES='+json.dumps(pictures,ensure_ascii=False,separators=(',',':'))+';\nconst TISHKA_LAYERS='+json.dumps(layers,separators=(',',':'))+';\n'
 (root/'tools/art-bundle.js').write_text(js)
