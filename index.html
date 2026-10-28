@@ -57,8 +57,11 @@
   #btnSay:active{transform:translateY(2px);box-shadow:0 2px 0 #d8a800}
 
   /* ---------- screens ---------- */
-  .screen{position:fixed;inset:0;z-index:10;display:flex;flex-direction:column;align-items:center;justify-content:center;
-    padding:18px;overflow:auto;background:radial-gradient(circle at 50% 20%,#ffffff 0%,#dff3ff 45%,#bfe4ff 100%)}
+  .screen{position:fixed;inset:0;z-index:10;display:flex;flex-direction:column;align-items:center;
+    justify-content:flex-start;padding:18px;overflow-y:auto;-webkit-overflow-scrolling:touch;
+    background:radial-gradient(circle at 50% 20%,#ffffff 0%,#dff3ff 45%,#bfe4ff 100%)}
+  /* margin:auto внутри flex-скролла: карточка по центру, но верх ВСЕГДА достижим */
+  .screen > .card{margin:auto 0}
   .card{background:#fff;border-radius:28px;padding:22px 24px;max-width:760px;width:100%;text-align:center;
     box-shadow:0 12px 0 rgba(90,110,160,.18),0 20px 40px rgba(90,110,160,.25)}
   h1{margin:0 0 6px;font-size:clamp(28px,6vw,46px);color:#4a3a6a;letter-spacing:1px}
@@ -108,6 +111,17 @@
     box-shadow:0 10px 30px rgba(0,0,0,.25);opacity:0;transition:.3s}
   #toast.show{opacity:1;transform:translate(-50%,-50%) scale(1)}
   .tiny{font-size:12px;color:#9a8ab0;font-weight:700;margin-top:10px}
+  /* липкая шапка карты: кнопка «Меню» не уезжает при прокрутке */
+  .mapHead{position:sticky;top:-22px;z-index:3;display:flex;align-items:center;justify-content:space-between;
+    gap:8px;background:#fff;padding:10px 0;margin:-10px 0 6px;border-bottom:2px solid #eef2fb}
+  .mapHead h2{margin:0;font-size:clamp(16px,3.4vw,24px)}
+  /* плавающая кнопка возврата */
+  .fab{position:fixed;right:16px;bottom:16px;z-index:30;width:64px;height:64px;border:none;border-radius:50%;
+    cursor:pointer;font-size:30px;line-height:1;display:none;align-items:center;justify-content:center;
+    background:linear-gradient(#ffd93d,#ffb700);box-shadow:0 6px 0 #c98c00,0 10px 24px rgba(0,0,0,.22);
+    font-family:inherit;touch-action:manipulation}
+  .fab:active{transform:translateY(3px);box-shadow:0 3px 0 #c98c00}
+  .fab.show{display:flex}
 </style>
 </head>
 <body>
@@ -149,9 +163,9 @@
 <!-- КАРТА -->
 <div class="screen hidden" id="scrMap">
   <div class="card" style="max-width:1100px">
-    <div class="row" style="justify-content:space-between;align-items:center">
+    <div class="mapHead">
       <button class="btn small blue" id="btnMenu">◀ Меню</button>
-      <h2 style="margin:0">Карта уровней</h2>
+      <h2>Карта уровней</h2>
       <div class="pill" id="mapStars" style="background:#fff3c4">⭐ 0</div>
     </div>
     <div id="mapWrap" style="margin-top:14px;text-align:left"></div>
@@ -175,6 +189,7 @@
   </div>
 </div>
 
+<button class="fab" id="btnHome" aria-label="В меню" title="В меню">🏠</button>
 <div id="toast"></div>
 
 <script>
@@ -1122,6 +1137,9 @@ function showScreen(id){
   ['scrMenu','scrMap','scrResult'].forEach(s=>{
     document.getElementById(s).classList.toggle('hidden', s!==id);
   });
+  // «домой» доступен с карты и с экрана результата
+  const fab=document.getElementById('btnHome');
+  if(fab) fab.classList.toggle('show', id==='scrMap'||id==='scrResult');
 }
 
 function renderMenu(){
@@ -1201,7 +1219,14 @@ document.getElementById('btnPlay').onclick = ()=>{
   startLevel(n);
 };
 document.getElementById('btnMap').onclick = ()=>{ renderMap(); showScreen('scrMap'); };
-document.getElementById('btnMenu').onclick = ()=>{ renderMenu(); showScreen('scrMenu'); };
+function gotoMenu(){
+  if(G) { G.screen='menu'; }
+  document.getElementById('hud').classList.add('hidden');
+  document.getElementById('prompt').classList.add('hidden');
+  renderMenu(); showScreen('scrMenu');
+}
+document.getElementById('btnHome').onclick = gotoMenu;
+document.getElementById('btnMenu').onclick = gotoMenu;
 document.getElementById('btnToMap').onclick = ()=>{ renderMap(); showScreen('scrMap'); };
 document.getElementById('btnBack').onclick = ()=>{ renderMap(); showScreen('scrMap'); G.screen='map';
   document.getElementById('hud').classList.add('hidden');
