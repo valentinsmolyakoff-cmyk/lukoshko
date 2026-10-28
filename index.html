@@ -143,6 +143,13 @@
     box-shadow:inset 0 -10px 0 rgba(200,160,90,.18)}
   #tishkaScene .pet{position:absolute;z-index:2;left:50%;top:52%;transform:translate(-50%,-50%);
     font-size:146px;line-height:1;filter:drop-shadow(0 8px 10px rgba(120,80,40,.22))}
+  #tishkaBody{position:absolute;inset:0;display:flex;align-items:flex-end;justify-content:center}
+  .tishkaSvg{width:100%;height:100%;display:block}
+  .tishkaSvg .handItem{font-family:"Segoe UI Emoji","Apple Color Emoji","Noto Color Emoji",sans-serif}
+  @media (prefers-reduced-motion: no-preference){
+    .tishkaSvg{animation:tBreathe 3.4s ease-in-out infinite;transform-origin:50% 92%}
+    @keyframes tBreathe{0%,100%{transform:scale(1)}50%{transform:scale(1.012)}}
+  }
   #tishkaScene .wear{position:absolute;transform-origin:center;line-height:1;z-index:4;
     filter:drop-shadow(0 3px 4px rgba(90,70,40,.3));transition:left .22s ease, top .22s ease, font-size .22s ease}
   #tishkaScene .wear.behind{z-index:1}
@@ -154,6 +161,10 @@
   .hItem .slot{font-size:10px;color:#a08dbb;font-weight:800}
   #wearBar{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin:6px 0 2px}
   #wearBar .btn{font-size:14px;padding:8px 16px}
+  .parentLink{background:none;border:none;color:#9aa6bd;font-size:12px;font-family:inherit;
+    text-decoration:underline;cursor:pointer;padding:10px 6px;letter-spacing:.02em}
+  .parentLink:hover{color:#6b7a96}
+  #parentBody p.sub{font-size:15px;line-height:1.5}
   /* ---- карточка совета ---- */
   .aiCard{margin-top:16px;padding:16px 16px 12px;border-radius:20px;background:linear-gradient(160deg,#fff7d9,#ffe9f3);
     border:3px solid #ffd93d;text-align:left}
@@ -234,7 +245,7 @@
     </div>
     <div class="row">
       <button class="btn small pink" id="btnHouse">Домик Тишки 🏡</button>
-      <button class="btn small blue" id="btnParent">Для родителей 👨‍👩‍👧</button>
+      <button class="parentLink" id="btnParent" aria-label="Раздел для взрослых">🔒 для взрослых</button>
     </div>
     <div class="tiny">Управление: мышка или палец. Разрешено ошибаться — проиграть нельзя.</div>
   </div>
@@ -285,8 +296,7 @@
     <div id="tishkaName">🦔 Наряди Тишку: нажми на вещь — и она сразу на нём!</div>
     <div id="tishkaScene">
       <div class="ground"></div>
-      <div class="pet">🦔</div>
-      <div id="wearLayer"></div>
+      <div id="tishkaBody"></div>
     </div>
     <div id="wearBar">
       <button class="btn small blue" id="btnWearOff">Снять всё</button>
@@ -298,6 +308,26 @@
 </div>
 
 <!-- РОДИТЕЛЯМ -->
+<div class="screen hidden" id="scrLock">
+  <div class="card" style="max-width:420px">
+    <div class="mapHead">
+      <button class="btn small blue" id="btnLockBack">◀ Меню</button>
+      <h2>Раздел для взрослых</h2>
+      <div class="pill" style="background:#eef2f8">🔒</div>
+    </div>
+    <p class="sub" style="text-align:left">Чтобы открыть статистику и рекомендации, решите пример.
+      Это простая защита от случайного входа ребёнка.</p>
+    <div id="lockTask" style="font-size:30px;font-weight:900;color:#4a3a6a;text-align:center;margin:14px 0"></div>
+    <input id="lockInput" inputmode="numeric" pattern="[0-9]*" autocomplete="off"
+           style="width:100%;box-sizing:border-box;padding:14px;border-radius:14px;border:3px solid #d7e3f7;
+                  font-size:24px;text-align:center;font-weight:900;font-family:inherit;color:#33415c">
+    <div class="row" style="margin-top:12px">
+      <button class="btn blue" id="btnLockOk">Войти</button>
+    </div>
+    <div id="lockErr" class="sub" style="color:#c0392b;min-height:20px;text-align:center"></div>
+  </div>
+</div>
+
 <div class="screen hidden" id="scrParent">
   <div class="card" style="max-width:840px;text-align:left">
     <div class="mapHead">
@@ -306,10 +336,10 @@
       <div class="pill" style="background:#e8ffe8" id="parentMedals">🍯 0</div>
     </div>
       <div id="aiBox" class="aiCard">
-        <div class="aiTitle">🦔 Тишка советует</div>
+        <div class="aiTitle">Рекомендации по занятиям</div>
         <div id="aiOut" class="aiText">Загляну-ка в твои звёздочки…</div>
         <div class="aiFoot">
-          <button class="btn small" id="btnAiRefresh">Ещё совет 🎲</button>
+          <button class="btn small" id="btnAiRefresh">Обновить рекомендацию</button>
           <span id="aiNote" class="aiNote"></span>
         </div>
     <div id="parentBody"></div>
@@ -1147,24 +1177,160 @@ function wearItem(item){
   persist(); renderTishka(); renderHouse();
   return true;
 }
-function renderTishka(){
-  const layer = document.getElementById('wearLayer');
-  if(!layer) return;
-  const o = outfit();
-  let html='';
-  for(const slot in o){
-    const e = o[slot];
-    if(!e) continue;
-    const look = Object.assign({}, ITEM_LOOK[e] || {x:74,y:70,s:40,r:0,z:4});
-    // чтобы вещи не наезжали друг на друга в полном образе
-    if(slot==='feet' && o.hand){ look.x = 32; look.y = 86; look.s = 30; }
-    if(slot==='hand' && o.feet && look.y > 60){ look.y -= 5; look.x += 3; }
-    if(slot==='neck' && o.hand && look.y > 60){ look.y = 64; }
-    html += '<span class="wear'+(look.behind?' behind':'')+'" style="left:'+look.x+'%;top:'+look.y+'%;'+
-            'font-size:'+look.s+'px;z-index:'+(look.z||4)+';'+
-            'transform:translate(-50%,-50%) rotate('+(look.r||0)+'deg)">'+e+'</span>';
+/* ============================================================
+   13г. ЁЖИК ТИШКА — рисованный SVG-персонаж с одеждой
+   ============================================================ */
+const SVG_NS = 'http://www.w3.org/2000/svg';
+
+function spikesPath(){
+  // иголки: зубчатая дуга вокруг спинки
+  const cx=150, cy=160, rx=94, ry=100, n=30;
+  let d='';
+  for(let i=0;i<=n;i++){
+    const t=-0.06 - i*(0.88/n);            // от правого бока через верх к левому
+    const a=Math.PI*(0.06 + i*(0.88/n));
+    const out = (i%2===0)? 1 : 0.80;
+    const x=cx - Math.cos(a)*rx*out;
+    const y=cy - Math.sin(a)*ry*out;
+    d += (i? 'L':'M') + x.toFixed(1) + ',' + y.toFixed(1);
   }
-  layer.innerHTML = html;
+  d += 'L' + (cx-rx*0.86).toFixed(1) + ',' + (cy+50) + 'L' + (cx+rx*0.86).toFixed(1) + ',' + (cy+50) + 'Z';
+  return d;
+}
+
+function heroSVG(o){
+  o = o || {};
+  const hat      = o.head === '🎩';
+  const crown    = o.head === '👑';
+  const glasses  = o.eyes === '🕶️';
+  const scarf    = o.neck === '🧣';
+  const mittens  = o.paws === '🧤';
+  const shoes    = o.feet === '👟';
+  const backpack = o.back === '🎒';
+  const item     = o.hand || '';
+  const held     = item ? '<text x="236" y="200" text-anchor="middle" font-size="42" class="handItem">'+item+'</text>' : '';
+
+  return '<svg class="tishkaSvg" viewBox="0 0 300 262" xmlns="'+SVG_NS+'" role="img" aria-label="Ёжик Тишка">' +
+  '<defs>'+
+    '<linearGradient id="tFur" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#c99a6a"/><stop offset="1" stop-color="#a87750"/></linearGradient>'+
+    '<linearGradient id="tBelly" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffeed3"/><stop offset="1" stop-color="#f6d3a8"/></linearGradient>'+
+    '<linearGradient id="tSpike" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#8a5c3b"/><stop offset="1" stop-color="#5d3b27"/></linearGradient>'+
+    '<linearGradient id="tGold" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffe37a"/><stop offset="1" stop-color="#e0a21c"/></linearGradient>'+
+    '<linearGradient id="tRed" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ef4b4b"/><stop offset="1" stop-color="#b8232a"/></linearGradient>'+
+    '<linearGradient id="tDenim" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7fb6ff"/><stop offset="1" stop-color="#2f6fd0"/></linearGradient>'+
+  '</defs>'+
+
+  /* мягкая тень на полу */
+  '<ellipse cx="150" cy="246" rx="82" ry="12" fill="rgba(120,80,40,.16)"/>'+
+
+  /* рюкзак — за спинкой */
+  (backpack ?
+    '<g class="bp">'+
+      '<rect x="72" y="134" width="156" height="104" rx="32" fill="#e07b39"/>'+
+      '<rect x="88" y="186" width="124" height="42" rx="19" fill="#c2601f"/>'+
+      '<circle cx="150" cy="207" r="7" fill="#f7c07a"/>'+
+    '</g>' : '')+
+
+  /* ножки и обувь */
+  '<rect x="124" y="198" width="21" height="24" rx="10" fill="url(#tFur)"/>'+
+  '<rect x="155" y="198" width="21" height="24" rx="10" fill="url(#tFur)"/>'+
+
+
+  /* туловище и иголки */
+  '<path d="'+spikesPath()+'" fill="url(#tSpike)"/>'+
+  '<ellipse cx="150" cy="172" rx="62" ry="56" fill="url(#tFur)"/>'+
+  '<ellipse cx="150" cy="188" rx="42" ry="34" fill="url(#tBelly)"/>'+
+  /* обувь — поверх, чтобы её было видно */
+  (shoes ?
+    '<g class="shoes">'+
+      '<path d="M120 214 q0 -8 9 -8 h14 q9 0 9 8 v8 q0 8 -9 8 h-14 q-9 0 -9 -8 z" fill="url(#tDenim)"/>'+
+      '<path d="M118 224 h34" stroke="#fff" stroke-width="3.5" stroke-linecap="round" opacity=".9"/>'+
+      '<path d="M148 214 q0 -8 9 -8 h14 q9 0 9 8 v8 q0 8 -9 8 h-14 q-9 0 -9 -8 z" fill="url(#tDenim)"/>'+
+      '<path d="M146 224 h34" stroke="#fff" stroke-width="3.5" stroke-linecap="round" opacity=".9"/>'+
+    '</g>' :
+    '<ellipse cx="130" cy="222" rx="19" ry="10" fill="url(#tBelly)"/>'+
+    '<ellipse cx="170" cy="222" rx="19" ry="10" fill="url(#tBelly)"/>')+
+
+  /* лапки */
+  '<ellipse cx="96" cy="190" rx="16" ry="26" fill="url(#tFur)" transform="rotate(14 96 190)"/>'+
+  '<ellipse cx="204" cy="190" rx="16" ry="26" fill="url(#tFur)" transform="rotate(-14 204 190)"/>'+
+  (mittens ?
+    '<g class="mittens">'+
+      '<ellipse cx="86" cy="200" rx="17" ry="15" fill="#ff6f91"/>'+
+      '<ellipse cx="74" cy="193" rx="7" ry="9" fill="#ff8fab" transform="rotate(-25 74 193)"/>'+
+      '<ellipse cx="214" cy="200" rx="17" ry="15" fill="#ff6f91"/>'+
+      '<ellipse cx="226" cy="193" rx="7" ry="9" fill="#ff8fab" transform="rotate(25 226 193)"/>'+
+    '</g>' :
+    '<ellipse cx="86" cy="202" rx="14" ry="12" fill="url(#tBelly)"/>'+
+    '<ellipse cx="214" cy="202" rx="14" ry="12" fill="url(#tBelly)"/>')+
+
+  /* голова */
+  '<circle cx="116" cy="104" r="15" fill="url(#tFur)"/><circle cx="116" cy="104" r="8" fill="#f0a9b3"/>'+
+  '<circle cx="184" cy="104" r="15" fill="url(#tFur)"/><circle cx="184" cy="104" r="8" fill="#f0a9b3"/>'+
+  '<ellipse cx="150" cy="132" rx="56" ry="50" fill="url(#tBelly)"/>'+
+  '<ellipse cx="121" cy="156" rx="12" ry="8" fill="#ffb3c1" opacity=".55"/>'+
+  '<ellipse cx="179" cy="156" rx="12" ry="8" fill="#ffb3c1" opacity=".55"/>'+
+  '<ellipse cx="133" cy="130" rx="9" ry="10" fill="#3b2a1e"/>'+
+  '<ellipse cx="167" cy="130" rx="9" ry="10" fill="#3b2a1e"/>'+
+  '<circle cx="130" cy="126" r="3.2" fill="#fff"/><circle cx="164" cy="126" r="3.2" fill="#fff"/>'+
+  '<ellipse cx="150" cy="152" rx="9" ry="7" fill="#4a3123"/>'+
+  '<path d="M139 162 q11 10 22 0" stroke="#4a3123" stroke-width="3.4" fill="none" stroke-linecap="round"/>'+
+
+  /* лямки рюкзака — поверх, чтобы рюкзак «читался» */
+  (backpack ?
+    '<g class="straps">'+
+      '<path d="M118 138 q-16 28 -10 58" stroke="#b6561a" stroke-width="11" fill="none" stroke-linecap="round"/>'+
+      '<path d="M182 138 q16 28 10 58" stroke="#b6561a" stroke-width="11" fill="none" stroke-linecap="round"/>'+
+    '</g>' : '')+
+
+  /* шарф */
+  (scarf ?
+    '<g class="scarf">'+
+      '<path d="M102 171 q48 15 96 0 q10 -2 12 8 q2 10 -8 13 q-52 19 -104 0 q-10 -3 -8 -13 q2 -10 12 -8 z" fill="url(#tRed)"/>'+
+      '<path d="M202 184 q12 8 10 40 q-2 14 -12 11 q-7 -2 -5 -13 q2 -22 -5 -34 z" fill="#b8232a"/>'+
+      '<path d="M196 218 h12 M196 225 h12" stroke="#fff" stroke-width="3" opacity=".6" stroke-linecap="round"/>'+
+    '</g>' : '')+
+
+  /* очки */
+  (glasses ?
+    '<g class="glasses">'+
+      '<rect x="114" y="119" width="34" height="22" rx="9" fill="#2b2b33"/>'+
+      '<rect x="152" y="119" width="34" height="22" rx="9" fill="#2b2b33"/>'+
+      '<rect x="118" y="123" width="12" height="5" rx="2.5" fill="#7fd0ff" opacity=".65"/>'+
+      '<rect x="156" y="123" width="12" height="5" rx="2.5" fill="#7fd0ff" opacity=".65"/>'+
+      '<path d="M148 128 h4" stroke="#2b2b33" stroke-width="4"/>'+
+      '<path d="M114 128 q-8 2 -14 6 M186 128 q8 2 14 6" stroke="#2b2b33" stroke-width="3.5" fill="none" stroke-linecap="round"/>'+
+    '</g>' : '')+
+
+  /* шапка-цилиндр */
+  (hat ?
+    '<g class="hat" transform="rotate(-7 150 96)">'+
+      '<ellipse cx="150" cy="96" rx="52" ry="11" fill="#2b2b33"/>'+
+      '<path d="M118 96 L124 42 q26 -10 52 0 L182 96 z" fill="#33333d"/>'+
+      '<rect x="119" y="74" width="62" height="13" fill="url(#tRed)"/>'+
+      '<path d="M126 44 q24 -8 48 0" stroke="#4b4b57" stroke-width="4" fill="none"/>'+
+    '</g>' : '')+
+
+  /* корона */
+  (crown ?
+    '<g class="crown" transform="rotate(-5 150 96)">'+
+      '<path d="M112 96 l6 -40 l18 18 l14 -30 l14 30 l18 -18 l6 40 z" fill="url(#tGold)" stroke="#c98f14" stroke-width="2"/>'+
+      '<rect x="112" y="96" width="76" height="12" rx="6" fill="#e0a21c"/>'+
+      '<circle cx="150" cy="76" r="5" fill="#ff5d8f"/><circle cx="126" cy="82" r="4" fill="#5ad0ff"/><circle cx="174" cy="82" r="4" fill="#5ad0ff"/>'+
+    '</g>' : '')+
+
+  /* предмет в лапке */
+  (held || '')+
+
+  '</svg>';
+}
+
+function renderTishka(){
+  const box = document.getElementById('tishkaBody');
+  if(box){
+    box.innerHTML = heroSVG(outfit());
+  }
+  if(typeof refreshHeroImage==='function') refreshHeroImage();
 }
 function collectionIndex(stars){ let n=0; for(const it of COLLECTION) if(stars>=it.s) n++; return n; }
 function nextCollection(stars){ for(const it of COLLECTION) if(stars<it.s) return it; return null; }
@@ -1324,6 +1490,7 @@ function startLevel(n){
   G.levelT0 = performance.now(); G.roundLog = [];
   showLevelIntro(lv);
   G.introUntil = performance.now() + 1150;
+  if(typeof refreshHeroImage==='function'){ heroImgKey=''; refreshHeroImage(); }
   G.catcher.x = Wd/2; G.catcher.tx = Wd/2;
   G.catcher.y = Hd-90;
   G.screen='play';
@@ -1786,13 +1953,31 @@ function drawItem(it){
   ctx.restore();
 }
 
+let heroImg=null, heroImgKey='';
+function refreshHeroImage(){
+  const key = JSON.stringify(outfit());
+  if(key===heroImgKey && heroImg) return;
+  heroImgKey = key;
+  const svg = heroSVG(outfit());
+  const img = new Image();
+  img.onload = ()=>{ heroImg = img; };
+  img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
+}
 function drawCatcher(){
   const cG=G.catcher;
   ctx.save();
   ctx.translate(cG.x,cG.y);
   // тень
   ctx.beginPath(); ctx.ellipse(0,52,58,13,0,0,7); ctx.fillStyle='rgba(0,0,0,.18)'; ctx.fill();
-  // корзинка
+  // ёжик Тишка в надетых вещах (тот же, что в домике)
+  if(!heroImg) refreshHeroImage();
+  if(heroImg){
+    ctx.drawImage(heroImg, -70, -108, 140, 122);
+  } else {
+    ctx.font='62px '+EMOJI_FONT; ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.fillText('🦔',0,-22);
+  }
+  // корзинка спереди — закрывает нижнюю часть, ёжик «сидит» в ней
   ctx.beginPath();
   ctx.moveTo(-58,0); ctx.lineTo(58,0); ctx.lineTo(42,48); ctx.lineTo(-42,48); ctx.closePath();
   const g=ctx.createLinearGradient(0,0,0,50);
@@ -1800,16 +1985,7 @@ function drawCatcher(){
   ctx.fillStyle=g; ctx.fill();
   ctx.lineWidth=4; ctx.strokeStyle='#8a5a22'; ctx.stroke();
   ctx.beginPath(); ctx.moveTo(-46,16); ctx.lineTo(46,16); ctx.stroke();
-  // ёжик сверху
-  ctx.font='62px '+EMOJI_FONT; ctx.textAlign='center'; ctx.textBaseline='middle';
-  ctx.fillText('🦔',0,-22);
-  // надетые вещи видны и в игре (обувь прячет корзинка, поэтому её не рисуем)
-  const o = (save && save.outfit) || {};
-  if(o.back){ ctx.font='30px '+EMOJI_FONT; ctx.fillText(o.back, -40, -30); }
-  if(o.head){ ctx.font='34px '+EMOJI_FONT; ctx.fillText(o.head, 2, -58); }
-  if(o.eyes){ ctx.font='36px '+EMOJI_FONT; ctx.fillText(o.eyes, 0, -22); }
-  if(o.neck){ ctx.font='30px '+EMOJI_FONT; ctx.fillText(o.neck, -2, 12); }
-  if(o.hand){ ctx.font='26px '+EMOJI_FONT; ctx.fillText(o.hand, 46, -26); }
+  ctx.beginPath(); ctx.ellipse(0,0,58,9,0,0,7); ctx.fillStyle='#c98a45'; ctx.fill();
   ctx.restore();
 }
 
@@ -2302,12 +2478,12 @@ function handleQuizClick(p){
    14. ЭКРАНЫ
    ============================================================ */
 function showScreen(id){
-  ['scrMenu','scrMap','scrResult','scrHouse','scrParent'].forEach(s=>{
+  ['scrMenu','scrMap','scrResult','scrHouse','scrParent','scrLock'].forEach(s=>{
     document.getElementById(s).classList.toggle('hidden', s!==id);
   });
   // «домой» доступен с карты и с экрана результата
   const fab=document.getElementById('btnHome');
-  if(fab) fab.classList.toggle('show', id==='scrMap'||id==='scrResult'||id==='scrHouse'||id==='scrParent');
+  if(fab) fab.classList.toggle('show', id==='scrMap'||id==='scrResult'||id==='scrHouse'||id==='scrParent'||id==='scrLock');
 }
 
 function renderMenu(){
@@ -2472,10 +2648,10 @@ function renderParent(){
   const perfect=Object.keys(save.levels).filter(k=>(save.levels[k].stars||0)===3).length;
   let html='';
   html+='<p class="sub" style="text-align:left">'+
-        'Пройдено <b>'+played+'</b> '+plural(played,'уровень','уровня','уровней')+' из '+LEVELS.length+
-        ', звёзд <b>'+st+'</b>, из них на три звезды — <b>'+perfect+'</b>.<br>'+
-        'Звание: <b>'+rk.e+' '+rk.n+'</b>'+(nx? ' · до «'+nx.n+'» осталось '+(nx.s-st)+' ⭐':'')+
-        ' · медалей за задания дня: <b>'+(save.medals||0)+'</b></p>';
+        'Пройдено уровней: <b>'+played+'</b> из '+LEVELS.length+' · собрано звёзд: <b>'+st+'</b> из '+MAX_STARS+
+        ' · пройдено на три звезды: <b>'+perfect+'</b><br>'+
+        'Текущее звание: <b>'+rk.n+'</b>'+(nx? ' · до звания «'+nx.n+'» — '+(nx.s-st)+' звёзд':'')+
+        ' · выполнено заданий дня: <b>'+(save.medals||0)+'</b></p>';
 
   const list=[];
   for(const key in SKILLS){
@@ -2490,24 +2666,24 @@ function renderParent(){
     const lvls=LEVELS.filter(l=>l.r.some(r=>r.k===kind) && ((save.levels[l.n]||{}).stars||0)<3)
                      .slice(0,3).map(l=>l.n);
     if(lvls.length){
-      html+='<div class="advice">🌱 Больше всего звёздочек принесёт «'+SKILLS[weak.key].toLowerCase()+
-            '» — сейчас верных попыток '+weak.pct+'%. Загляните на уровни '+
-            lvls.map(n=>'<b>'+n+'</b>').join(', ')+': там это тренируется веселее всего.</div>';
+      html+='<div class="advice">Наименее сформированный навык — «'+SKILLS[weak.key].toLowerCase()+
+            '»: доля верных действий '+weak.pct+'%. Рекомендуем отработать его на уровнях '+
+            lvls.map(n=>'<b>'+n+'</b>').join(', ')+'. Достаточно 10–15 минут в день, без принуждения.</div>';
     }
   } else {
-    html+='<div class="advice">🌱 Тишка ещё приглядывается: сыграйте 3–4 уровня, и здесь появится '+
-          'понятная картина, что даётся легко, а что стоит потренировать.</div>';
+    html+='<div class="advice">Данных пока недостаточно: для статистики по навыкам нужно выполнить '+
+          'не менее 8 заданий в каждой категории. Пройдите 3–4 уровня.</div>';
   }
   for(const x of list){
     html+='<div class="skillRow"><div class="t"><span>'+SKILLS[x.key]+'</span><span>'+
           (x.pct===null?'—':x.pct+'%')+'</span></div>'+
           '<div class="sbar'+(x.pct!==null&&x.pct<70?' low':'')+'"><div style="width:'+(x.pct||0)+'%"></div></div>'+
-          '<div class="skNote">попаданий '+x.ok+' · промахов '+x.miss+'</div></div>';
+          '<div class="skNote">верных: '+x.ok+' · ошибочных: '+x.miss+'</div></div>';
   }
   html+='<div class="advice" style="background:#eef4ff;color:#3b5a92">'+
-        '🕐 Тишка советует играть по 10–15 минут — как раз один-два мира. '+
-        'Потом лучше побегать и попить воды: так звёздочки запоминаются крепче.</div>'+
-        '<div class="row"><button class="btn small blue" id="btnParentReset">Начать всё заново</button></div>';
+        'Рекомендуемая длительность занятия — 10–15 минут в день. Игра не содержит рекламы, покупок '+
+        'и внешних ссылок; весь прогресс хранится на этом устройстве.</div>'+
+        '<div class="row"><button class="btn small blue" id="btnParentReset">Сбросить прогресс ребёнка</button></div>';
   document.getElementById('parentBody').innerHTML=html;
   const rst=document.getElementById('btnParentReset');
   if(rst) rst.onclick=()=>{
@@ -2550,12 +2726,26 @@ function kidFacts(){
   return {st, played, sk, recent, rank:rankFor(st).n};
 }
 
+function practiceLevels(){
+  const f=kidFacts();
+  const weak=f.sk[0];
+  if(!weak) return '';
+  const kindOf={ 'Внимание и реакция':'catch', 'Буквы и чтение':'word', 'Счёт':'dots',
+    'Память':'mem', 'Логика и обобщение':'sort', 'Закономерности':'seq',
+    'Знания о мире':'choice', 'Мелкая моторика':'maze', 'Чувство ритма':'rhythm' };
+  const kind=kindOf[weak.name];
+  return LEVELS.filter(l=>l.r.some(r=>r.k===kind) && ((save.levels[l.n]||{}).stars||0)<3)
+               .slice(0,3).map(l=>l.n).join(', ');
+}
 function aiPromptFacts(){
   const f=kidFacts();
-  return 'Ребёнок 5-6 лет играет в развивающую игру «Лукошко». '+
-    'Собрано звёзд: '+f.st+', пройдено уровней: '+f.played+', звание: «'+f.rank+'». '+
-    (f.sk.length? 'Процент верных действий по навыкам: '+f.sk.map(x=>x.name+' '+x.pct+'%').join(', ')+'. ' : 'Статистики пока мало. ')+
-    (f.recent.length? 'Последние задания: '+f.recent.join('; ')+'. ' : '');
+  const strong=f.sk.filter(x=>x.pct>=70).map(x=>x.name).join(', ');
+  const weak=f.sk.filter(x=>x.pct<70).map(x=>x.name).join(', ');
+  return 'Данные об игре ребёнка 5-6 лет: собрано звёзд '+f.st+', пройдено уровней '+f.played+
+    (strong? '; уверенно: '+strong : '')+
+    (weak? '; требуют внимания: '+weak : '')+'.'+
+    (f.recent.length? ' Последние задания: '+f.recent.join('; ')+'.' : '')+
+    (practiceLevels()? ' Для тренировки слабого навыка подходят уровни: '+practiceLevels()+'.' : '');
 }
 
 /* ---- встроенный совет, если ИИ недоступен ---- */
@@ -2566,42 +2756,61 @@ function localAdvice(){
     'Память':'mem', 'Логика и обобщение':'sort', 'Закономерности':'seq',
     'Знания о мире':'choice', 'Мелкая моторика':'maze', 'Чувство ритма':'rhythm' };
   const tips={
-    catch:'поиграйте в «поймай только яблоки»: раскладывайте яблоки и груши по разным мискам',
-    word:'собирайте слова из магнитов на холодильнике — по одной букве, с хлопком в ладоши',
-    dots:'считайте ступеньки и ложки вслух, дотрагиваясь до каждой',
-    mem:'поиграйте в «что спряталось»: уберите один предмет со стола и спросите, кто пропал',
-    sort:'разложите носки и футболки по двум кучкам и назовите признак вслух',
-    seq:'выложите узор из пуговиц: большая-маленькая-большая, и попросите продолжить',
-    choice:'задавайте вопросы «а что будет, если…» по дороге в садик',
-    maze:'рисуйте дорожки по клеточкам и ведите пальчиком от старта к домику',
-    rhythm:'хлопайте в ладоши под музыку — громко-тихо, быстро-медленно'
+    catch:'попросите ребёнка раскладывать предметы по одному признаку и называть его вслух',
+    word:'собирайте короткие слова из магнитов на холодильнике — по одной букве за раз',
+    dots:'считайте предметы, дотрагиваясь до каждого: ступеньки, ложки, игрушки',
+    mem:'раскладывайте 4–5 предметов, один убирайте и спрашивайте, чего не хватает',
+    sort:'предложите разложить одежду по двум признакам и объяснить выбор',
+    seq:'выкладывайте узор из пуговиц или мозаики и просите продолжить ряд',
+    choice:'задавайте вопросы «что будет, если…» по дороге в садик',
+    maze:'рисуйте дорожки по клеточкам и ведите по ним карандашом не отрывая руки',
+    rhythm:'отбивайте ритм ладонями под музыку: тихо-громко, медленно-быстро'
   };
   if(!weak || weak.tot<8){
-    return 'Тишка только знакомится с твоими звёздочками! 🦔 Поиграй ещё пару уровней — и Тишка расскажет, '+
-           'что получается лучше всего и что стоит потренировать.';
+    return 'Данных пока недостаточно: для справки по навыкам нужно выполнить не менее 8 заданий '+
+           'в каждой категории. Пройдите 3–4 уровня — и здесь появится разбор.';
   }
   const kind=kindOf[weak.name]||'catch';
   const lvls=LEVELS.filter(l=>l.r.some(r=>r.k===kind) && ((save.levels[l.n]||{}).stars||0)<3).slice(0,2).map(l=>l.n);
   const best=f.sk[f.sk.length-1];
-  let out='Звёзд в лукошке уже '+f.st+' — это здорово! 🦔 ';
-  if(best && best.pct>=75) out+='Лучше всего получается «'+best.name.toLowerCase()+'» — '+best.pct+'% верных действий. ';
-  out+='Хочется подтянуть «'+weak.name.toLowerCase()+'» ('+weak.pct+'%): '+tips[kind]+'. ';
-  if(lvls.length) out+='В игре для этого отлично подойдут уровни '+lvls.join(' и ')+'. ';
-  out+='А завтра — ещё немножко звёзд и хорошее настроение!';
+  let out='Собрано '+f.st+' звёзд, пройдено '+f.played+' уровней. ';
+  if(best && best.pct>=75) out+='Наиболее уверенно сформирован навык «'+best.name.toLowerCase()+'» ('+best.pct+'% верных действий). ';
+  out+='Внимания требует «'+weak.name.toLowerCase()+'» ('+weak.pct+'%): '+tips[kind]+'. ';
+  if(lvls.length) out+='В игре это тренируют уровни '+lvls.join(' и ')+'. ';
+  out+='Достаточно 10–15 минут в день, без принуждения.';
   return out;
 }
 
 /* ---- запрос к ИИ (без ключей и настроек) ---- */
 function aiUrl(prompt){
-  const q = encodeURIComponent(prompt.slice(0, 1400));
+  const q = encodeURIComponent(prompt.slice(0, 1600));
   const sys = encodeURIComponent(
-    'Ты — весёлый ёжик Тишка, друг малыша 5 лет. Пишешь короткую записку родителю. '+
-    'Правила: по-русски, простыми бытовыми словами, как говорят с мамой на кухне. '+
-    'Ровно 3 предложения. Без списков, без заголовков, без markdown, без процентов и терминов, '+
-    'без выдуманных слов. Первое — что уже получается. Второе — что потренировать завтра. '+
-    'Третье — одно весёлое упражнение дома или в игре. Можно одну тёплую шутку. Не ставь диагнозов.');
+    'Ты — методист дошкольного образования и пишешь краткую справку для родителя ребёнка 5-6 лет '+
+    'по итогам развивающей игры «Лукошко» (ловля предметов, сортировка, память, закономерности, '+
+    'буквы, счёт, лабиринты, чувство ритма).\n'+
+    'Требования к ответу: только русский язык, без английских слов и транслитерации; '+
+    'ровно 3 предложения, не более 55 слов; деловой, спокойный тон, без сюсюканья и эмодзи; '+
+    'без списков, заголовков, markdown и процентов; никаких выдуманных слов, диагнозов и оценок личности.\n'+
+    'Структура: 1) что уже получается — с опорой на данные; 2) какой навык требует внимания; '+
+    '3) конкретное упражнение на 5-10 минут дома и номера подходящих уровней игры.\n'+
+    'Пример стиля: «Ловля предметов идёт уверенно, ошибок почти нет. Внимания требует различение '+
+    'букв: попробуйте собирать короткие слова из магнитов на холодильнике по одной букве. '+
+    'В игре это тренируют уровни 7 и 9 — по 5 минут в день достаточно.»');
   return AI_ENDPOINT + q + '?model=openai-fast&system=' + sys;
 }
+
+/* проверка качества ответа: русский, 2-4 предложения, без мусора */
+function aiTextIsGood(t){
+  if(!t || t.length<60 || t.length>700) return false;
+  if(/[a-zA-Z]{4,}/.test(t)) return false;                 // английские слова
+  const ru=(t.match(/[а-яёА-ЯЁ]/g)||[]).length;
+  if(ru < t.length*0.6) return false;
+  const sentences=(t.match(/[.!?]+(\s|$)/g)||[]).length;
+  if(sentences<2 || sentences>4) return false;
+  if(/\*\*|^#|\n\s*[-*]/m.test(t)) return false;          // markdown
+  return true;
+}
+
 async function aiFetchAdvice(prompt, ms){
   const deadline = Date.now() + (ms||60000);
   let lastErr=null;
@@ -2625,8 +2834,9 @@ async function aiFetchAdvice(prompt, ms){
       }
       if(!r.ok) throw new Error('ответ '+r.status);   // 5xx — сервис занят, пробуем ещё
       let t = await r.text();
-      t = String(t||'').trim().replace(/^["«\s]+|["»\s]+$/g,'');
-      if(t.length < 25) throw new Error('пустой ответ');
+      t = String(t||'').trim().replace(/^["«\s]+|["»\s]+$/g,'')
+            .replace(/\s+/g,' ').replace(/\s+([.,!?;:])/g,'$1');
+      if(!aiTextIsGood(t)) throw new Error('неудачный ответ');
       return t;
     }catch(e){
       lastErr=e;
@@ -2651,21 +2861,21 @@ async function loadParentAdvice(force){
   }
   // 1) сразу показываем тёплый совет, чтобы экран не был пустым
   out.textContent = localAdvice();
-  note.textContent = '🦔 Тишка уже придумывает совет получше…';
+  note.textContent = 'Формируем рекомендацию по данным последних занятий…';
   // 2) и подменяем его на живой, когда он придёт
   try{
     const prompt = aiPromptFacts() +
       'Напиши родителю короткий совет: что у малыша уже получается, что потренировать завтра и как это сделать дома.';
     const txt = await aiFetchAdvice(prompt, 70000);
     save.aiAdvice = {text:txt, rounds:(save.roundLog||[]).length,
-      when:'Тишка придумал совет в '+new Date().toLocaleTimeString('ru-RU',{hour:'2-digit',minute:'2-digit'})};
+      when:'Сформировано в '+new Date().toLocaleTimeString('ru-RU',{hour:'2-digit',minute:'2-digit'})};
     persist();
     if(document.getElementById('aiOut')===out && !document.getElementById('scrParent').classList.contains('hidden')){
       out.textContent = txt;
       note.textContent = save.aiAdvice.when;
     }
   }catch(e){
-    note.textContent = '🦔 Тишка придумал совет сам — и это тоже отличный совет!';
+    note.textContent = 'Рекомендация составлена по данным игры (без подключения к сети).';
   }
 }
 
@@ -2717,7 +2927,36 @@ function gotoMenu(){
 document.getElementById('btnHome').onclick = gotoMenu;
 document.getElementById('btnHouse').onclick = ()=>{ audio(); renderHouse(); showScreen('scrHouse'); };
 document.getElementById('btnHouseBack').onclick = gotoMenu;
-document.getElementById('btnParent').onclick = ()=>{ renderParent(); showScreen('scrParent'); loadParentAdvice(false); };
+/* --- вход в раздел для взрослых: простой пример --- */
+let lockAnswer=0;
+function openParentGate(){
+  const a=Math.floor(Math.random()*40)+15, b=Math.floor(Math.random()*30)+8;
+  lockAnswer=a+b;
+  document.getElementById('lockTask').textContent=a+' + '+b+' = ?';
+  const inp=document.getElementById('lockInput');
+  inp.value=''; document.getElementById('lockErr').textContent='';
+  showScreen('scrLock');
+  setTimeout(()=>{ try{ inp.focus(); }catch(e){} }, 150);
+}
+function tryParentGate(){
+  const v=parseInt(document.getElementById('lockInput').value,10);
+  if(v===lockAnswer){
+    renderParent(); showScreen('scrParent'); loadParentAdvice(false);
+  } else {
+    document.getElementById('lockErr').textContent='Неверно. Попробуйте ещё раз.';
+    document.getElementById('lockInput').value='';
+    openParentGateKeepTask();
+  }
+}
+function openParentGateKeepTask(){
+  const inp=document.getElementById('lockInput'); if(inp){ inp.value=''; inp.focus(); }
+}
+document.getElementById('btnParent').onclick = openParentGate;
+document.getElementById('btnLockBack').onclick = gotoMenu;
+document.getElementById('btnLockOk').onclick = tryParentGate;
+document.getElementById('lockInput').addEventListener('keydown', e=>{
+  if(e.key==='Enter') tryParentGate();
+});
 bindAiUI();
 document.getElementById('btnParentBack').onclick = gotoMenu;
 document.getElementById('btnMenu').onclick = gotoMenu;
