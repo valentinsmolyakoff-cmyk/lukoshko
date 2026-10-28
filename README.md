@@ -1,7 +1,7 @@
 # 🦔 Лукошко — развивающая игра для детей 5+
 
 > **Играть онлайн: [https://valentinsmolyakoff-cmyk.github.io/lukoshko/](https://valentinsmolyakoff-cmyk.github.io/lukoshko/)**
-> Репозиторий: <https://github.com/valentinsmolyakoff-cmyk/lukoshko> · 100 уровней · 10 миров · офлайн после установки
+> Репозиторий: <https://github.com/valentinsmolyakoff-cmyk/lukoshko> · 200 уровней · 20 миров · 11 типов заданий · офлайн после установки
 
 Игра уже **запущена и доступна онлайн** (живое превью в этом чате). Всё, что ниже, — про то, как
 открыть её где угодно: на телефоне ребёнка, на планшете, на компьютере, без интернета и с иконкой

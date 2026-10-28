@@ -122,6 +122,30 @@
     font-family:inherit;touch-action:manipulation}
   .fab:active{transform:translateY(3px);box-shadow:0 3px 0 #c98c00}
   .fab.show{display:flex}
+  /* полоса ежедневных заданий */
+  .dayBox{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin:0 0 14px}
+  .dayChip{background:#fff;border:3px solid #e6ecf8;border-radius:14px;padding:8px 12px;font-weight:800;
+    font-size:13px;color:#4a3a6a;cursor:pointer;font-family:inherit;max-width:230px;text-align:left;line-height:1.25}
+  .dayChip:active{transform:translateY(2px)}
+  .dayChip.done{background:#e9ffe4;border-color:#a8e79b;color:#3d7a2e}
+  .dayHead{font-weight:900;color:#7a6a95;font-size:13px;margin:0 0 8px;letter-spacing:.4px}
+  /* домик */
+  .house{display:grid;grid-template-columns:repeat(auto-fill,minmax(84px,1fr));gap:10px;margin-top:8px}
+  .hItem{background:#fff;border-radius:16px;padding:8px 4px;text-align:center;box-shadow:0 4px 0 rgba(90,110,160,.14)}
+  .hItem .e{font-size:30px;line-height:1.15}
+  .hItem .n{font-size:11px;font-weight:800;color:#6a5a85;line-height:1.15}
+  .hItem .need{font-size:10px;color:#a08dbb;font-weight:800}
+  .hItem.locked{opacity:.5;filter:grayscale(1);background:#f4f6fb}
+  .hItem.fresh{animation:pop .5s cubic-bezier(.2,1.7,.4,1)}
+  /* родительский уголок */
+  .skillRow{margin:12px 0}
+  .skillRow .t{display:flex;justify-content:space-between;font-weight:800;font-size:14px;color:#4a3a6a;gap:10px}
+  .sbar{height:14px;background:#eef2fb;border-radius:999px;overflow:hidden;margin-top:5px}
+  .sbar div{height:100%;border-radius:999px;background:linear-gradient(90deg,#7be36a,#39c94b);transition:width .4s}
+  .sbar.low div{background:linear-gradient(90deg,#ffd93d,#ff9f1c)}
+  .skNote{font-size:12px;color:#9a8ab0;font-weight:700}
+  .advice{background:#fff8dc;border-radius:16px;padding:12px 14px;margin:14px 0;font-weight:800;color:#7a5c00;font-size:14px;line-height:1.4}
+  .resLine{font-weight:900;color:#2f7a22;font-size:clamp(14px,2.6vw,17px);margin:4px 0}
 </style>
 </head>
 <body>
@@ -146,15 +170,21 @@
   <div class="card">
     <div class="mascot">🦔🧺</div>
     <h1>ЛУКОШКО</h1>
-    <p class="sub">Ёжик Тишка собирает знания · 100 уровней · 5+</p>
+    <p class="sub" id="menuSub">Ёжик Тишка собирает знания · 200 уровней · 5+</p>
     <div class="rankBox" id="rankBox">
       <div id="rankName">Почемучка</div>
       <div class="rankBar"><div id="rankFill"></div></div>
       <div style="font-size:13px;margin-top:6px" id="rankInfo">0 из 300 звёзд</div>
     </div>
+    <div class="dayHead">ЗАДАНИЯ ДНЯ</div>
+    <div class="dayBox" id="dayBox"></div>
     <div class="row">
       <button class="btn" id="btnPlay">Играть ▶</button>
       <button class="btn blue" id="btnMap">Все уровни 🗺️</button>
+    </div>
+    <div class="row">
+      <button class="btn small pink" id="btnHouse">Домик Тишки 🏡</button>
+      <button class="btn small blue" id="btnParent">Для родителей 👨‍👩‍👧</button>
     </div>
     <div class="tiny">Управление: мышка или палец. Разрешено ошибаться — проиграть нельзя.</div>
   </div>
@@ -180,12 +210,38 @@
     <div id="starsRow"></div>
     <div class="bigscore" id="resScore">0 очков</div>
     <div class="rankLine" id="resRankLine"></div>
+    <div id="resExtra"></div>
     <p class="sub" id="resHint" style="margin-top:12px"></p>
     <div class="row">
       <button class="btn blue" id="btnRetry">Ещё раз 🔁</button>
       <button class="btn" id="btnNext">Дальше ▶</button>
       <button class="btn pink" id="btnToMap">Карта 🗺️</button>
     </div>
+  </div>
+</div>
+
+<!-- ДОМИК (коллекция) -->
+<div class="screen hidden" id="scrHouse">
+  <div class="card" style="max-width:900px">
+    <div class="mapHead">
+      <button class="btn small blue" id="btnHouseBack">◀ Меню</button>
+      <h2>Домик Тишки</h2>
+      <div class="pill" style="background:#fff3c4" id="houseStars">⭐ 0</div>
+    </div>
+    <p class="sub" id="houseSub"></p>
+    <div class="house" id="houseGrid"></div>
+  </div>
+</div>
+
+<!-- РОДИТЕЛЯМ -->
+<div class="screen hidden" id="scrParent">
+  <div class="card" style="max-width:840px;text-align:left">
+    <div class="mapHead">
+      <button class="btn small blue" id="btnParentBack">◀ Меню</button>
+      <h2 style="text-align:center">Для родителей</h2>
+      <div class="pill" style="background:#e8ffe8" id="parentMedals">🍯 0</div>
+    </div>
+    <div id="parentBody"></div>
   </div>
 </div>
 
@@ -211,6 +267,16 @@ const WORLDS = [
   {name:'Город Профессий', emoji:'🏙️', sky:['#eef3ff','#ffe8e8']},
   {name:'Музыкальный замок',emoji:'🎵',sky:['#f3e6ff','#e8f0ff']},
   {name:'Звёздная башня',  emoji:'⭐', sky:['#1a1140','#3d1d63']},
+  {name:'Долина динозавров',emoji:'🦕', sky:['#e8f7d0','#fff6c9']},
+  {name:'Весёлый зоопарк',  emoji:'🦁', sky:['#fff0d6','#ffe1b8']},
+  {name:'Времена года',     emoji:'🍂', sky:['#ffe9d1','#eef6ff']},
+  {name:'Школа волшебника', emoji:'🧙', sky:['#efe0ff','#dfe8ff']},
+  {name:'Остров сокровищ',  emoji:'🏴‍☠️', sky:['#d8f0e8','#ffeecb']},
+  {name:'Весёлая ферма',    emoji:'🐄', sky:['#e6ffd9','#fffbe0']},
+  {name:'Уборка дома',      emoji:'🧹', sky:['#e6f0ff','#f6e6ff']},
+  {name:'Город ПДД',        emoji:'🚦', sky:['#e3eaf5','#fff2d6']},
+  {name:'Подводный мир',    emoji:'🐠', sky:['#c9f0ff','#9fe3ff']},
+  {name:'Радужный фестиваль',emoji:'🌈', sky:['#ffe6f6','#e6f0ff']},
 ];
 
 /* ---------- 2. УРОВНИ ----------
@@ -404,6 +470,185 @@ const LEVELS = [
     {k:'word',q:'Собери слово ПОБЕДА',w:'ПОБЕДА',speed:1.15},
     {k:'seq',q:'Продолжи узор',pattern:['🔴','🟡','🟢','🔴','🟡'],opts:['🔴','🟡','🟢'],ans:'🟢'},
     {k:'choice',q:'Ты дошёл до конца! Сколько звёзд на небе?',visual:'⭐⭐⭐',opts:['2','3','4'],ans:'3'}]},
+/* ===== МИР 11. Долина динозавров (101–110) ===== */
+{n:101,w:10,t:'Яйца динозавров', r:[c('Лови яйца, а камни пропускай',['🥚'],['🪨'],6,{speed:.8,rate:1000})]},
+{n:102,w:10,t:'Кто что ест', r:[{k:'sort',q:'Травоядным — травку, хищникам — мясо',
+    bins:[{e:'🐢',match:['🥬','🌿','🍃']},{e:'🦖',match:['🥩','🍖','🍗']}],
+    items:['🥬','🥩','🌿','🍖','🍃','🍗'],need:6,rate:1900}]},
+{n:103,w:10,t:'Большие и маленькие', r:[c('Лови только БОЛЬШИХ динозавров',['🦕'],['🦎'],6,{sizeRule:'big',speed:.95,rate:950})]},
+{n:104,w:10,t:'Сколько яиц?', r:[{k:'choice',q:'Сколько яиц в гнезде?',visual:'🥚🥚🥚🥚🥚',opts:['4','5','6'],ans:'5'}]},
+{n:105,w:10,t:'Соедини точки', r:[{k:'dots',q:'Нажми на точки по порядку: 1, 2, 3…',count:6}]},
+{n:106,w:10,t:'Узор из следов', r:[{k:'seq',q:'Продолжи узор',pattern:['🦶','🦶','🌿','🦶','🦶'],opts:['🦶','🌿','🥚'],ans:'🌿'}]},
+{n:107,w:10,t:'Лава под ногами', r:[c('Лови яйца, лаву не трогай!',['🥚'],['🌋','🔥','🪨'],8,{speed:1,rate:900})]},
+{n:108,w:10,t:'Слово ЗУБ', r:[{k:'word',q:'Собери слово ЗУБ',w:'ЗУБ'}]},
+{n:109,w:10,t:'Точки до десяти', r:[{k:'dots',q:'Соедини все точки по порядку',count:10}]},
+{n:110,w:10,t:'БОСС: Долина', r:[
+    c('Сначала яйца!',['🥚'],['🪨','🌋'],7,{speed:1,rate:900}),
+    {k:'dots',q:'Соедини точки',count:8},
+    {k:'seq',q:'Продолжи узор',pattern:['🦕','🌿','🌿','🦕','🌿'],opts:['🦕','🌿','🥚'],ans:'🌿'}]},
+
+/* ===== МИР 12. Весёлый зоопарк (111–120) ===== */
+{n:111,w:11,t:'Найди пары', r:[{k:'mem',q:'Найди одинаковых зверей',set:['🦁','🐘','🦒','🐒']}]},
+{n:112,w:11,t:'Кто где живёт', r:[{k:'sort',q:'Кто живёт в жарких странах, а кто на севере?',
+    bins:[{e:'🌴',match:['🦁','🦒','🐘']},{e:'❄️',match:['🐧','🦭','🐻‍❄️']}],
+    items:['🦁','🐧','🦒','🦭','🐘','🐻‍❄️'],need:6,rate:1850}]},
+{n:113,w:11,t:'Малыши и мамы', r:[{k:'mem',q:'Найди пары',set:['🐘','🦁','🦒','🐒','🦓','🦛']}]},
+{n:114,w:11,t:'Бананы для обезьян', r:[c('Лови бананы, а камни не трогай',['🍌'],['🪨','🥥'],8,{speed:.95,rate:930})]},
+{n:115,w:11,t:'Кто лишний?', r:[{k:'odd',q:'Кто здесь лишний?',items:['🦁','🐘','🦒','🚗'],ans:3}]},
+{n:116,w:11,t:'Узор зоопарка', r:[{k:'seq',q:'Продолжи узор',pattern:['🦓','🦓','🦒','🦓','🦓'],opts:['🦓','🦒','🦁'],ans:'🦒'}]},
+{n:117,w:11,t:'Слово СЛОН', r:[{k:'word',q:'Собери слово СЛОН',w:'СЛОН'}]},
+{n:118,w:11,t:'Сколько обезьян?', r:[{k:'choice',q:'Сколько обезьян на дереве?',visual:'🐒🐒🐒',opts:['2','3','4'],ans:'3'}]},
+{n:119,w:11,t:'Найди отличие', r:[{k:'diff',q:'Найди, чем отличаются картинки',set:['🦁','🐘','🦒','🐒','🦓','🦛'],cols:3,rows:2}]},
+{n:120,w:11,t:'БОСС: День в зоопарке', r:[
+    {k:'mem',q:'Найди пары',set:['🦁','🐘','🦒','🐒']},
+    {k:'sort',q:'Разложи еду',bins:[{e:'🐒',match:['🍌','🍑']},{e:'🦁',match:['🥩','🍖']}],
+     items:['🍌','🥩','🍑','🍖'],need:4,rate:1700},
+    {k:'diff',q:'Найди отличие',set:['🦁','🐘','🦒','🐒','🦓','🦛'],cols:3,rows:2}]},
+
+/* ===== МИР 13. Времена года (121–130) ===== */
+{n:121,w:12,t:'Что бывает зимой?', r:[{k:'choice',q:'Что бывает зимой?',opts:['❄️','🌸','🍂','☀️'],ans:'❄️'}]},
+{n:122,w:12,t:'Сортировка по сезонам', r:[{k:'sort',q:'Разложи по временам года',
+    bins:[{e:'❄️',match:['⛄','🧣','🎿']},{e:'🌸',match:['🌷','🐣','🌱']},{e:'☀️',match:['🏖️','🍦','🌞']}],
+    items:['⛄','🌷','🏖️','🧣','🐣','🍦','🎿','🌱','🌞'],need:8,rate:1950}]},
+{n:123,w:12,t:'Лови снежинки', r:[c('Лови снежинки, листики пропускай',['❄️'],['🍂','🌧️'],8,{speed:1,rate:900})]},
+{n:124,w:12,t:'Узор осени', r:[{k:'seq',q:'Продолжи узор',pattern:['🍁','🍂','🍁','🍂'],opts:['🍁','🍂','🌿'],ans:'🍁'}]},
+{n:125,w:12,t:'Сколько листьев?', r:[{k:'choice',q:'Сколько листиков?',visual:'🍁🍁🍁🍁🍁🍁',opts:['5','6','7'],ans:'6'}]},
+{n:126,w:12,t:'Одежда по погоде', r:[{k:'sort',q:'Что наденем зимой, а что летом?',
+    bins:[{e:'🧥',match:['🧥','🧤','🧣']},{e:'👕',match:['👕','🩳','🕶️']}],
+    items:['🧥','👕','🧤','🩳','🧣','🕶️'],need:6,rate:1800}]},
+{n:127,w:12,t:'Слово ЛЕТО', r:[{k:'word',q:'Собери слово ЛЕТО',w:'ЛЕТО'}]},
+{n:128,w:12,t:'Что лишнее?', r:[{k:'odd',q:'Что не бывает весной?',items:['🌷','🐣','☔','🎃'],ans:3}]},
+{n:129,w:12,t:'Точки-сосульки', r:[{k:'dots',q:'Соедини точки по порядку',count:7}]},
+{n:130,w:12,t:'БОСС: Круглый год', r:[
+    {k:'choice',q:'В какое время года идёт снег?',opts:['❄️','☀️','🌸'],ans:'❄️'},
+    {k:'sort',q:'Разложи по сезонам',bins:[{e:'❄️',match:['⛄','🧣']},{e:'☀️',match:['🏖️','🍦']}],
+     items:['⛄','🏖️','🧣','🍦'],need:4,rate:1600},
+    {k:'seq',q:'Продолжи узор',pattern:['🌱','🌞','🍁','🌱','🌞'],opts:['🌱','🌞','🍁'],ans:'🍁'}]},
+
+/* ===== МИР 14. Школа волшебника (131–140) ===== */
+{n:131,w:13,t:'Узор заклинания', r:[{k:'seq',q:'Продолжи узор',pattern:['✨','🔮','🪄','✨','🔮'],opts:['✨','🔮','🪄'],ans:'🪄'}]},
+{n:132,w:13,t:'Лишнее зелье', r:[{k:'odd',q:'Что не для волшебства?',items:['🪄','🔮','✨','🚗'],ans:3}]},
+{n:133,w:13,t:'Поймай искры', r:[c('Лови искры, лягушек не трогай',['✨','⭐','🌟'],['🐸','🪨'],9,{speed:1.05,rate:880})]},
+{n:134,w:13,t:'Пары артефактов', r:[{k:'mem',q:'Найди пары',set:['🔮','🪄','✨','📜','🕯️','🗝️']}]},
+{n:135,w:13,t:'Ингредиенты', r:[{k:'sort',q:'Разложи по котлам',
+    bins:[{e:'🟢',match:['🌿','🍀','🥬']},{e:'🟣',match:['🍇','🫐','🌸']}],
+    items:['🌿','🍇','🍀','🫐','🥬','🌸'],need:6,rate:1850}]},
+{n:136,w:13,t:'Слово МАГИЯ', r:[{k:'word',q:'Собери слово МАГИЯ',w:'МАГИЯ'}]},
+{n:137,w:13,t:'Найди отличие', r:[{k:'diff',q:'Найди отличие',set:['🔮','🪄','✨','📜','🕯️','🗝️','⭐','🌙'],cols:4,rows:2}]},
+{n:138,w:13,t:'Лабиринт башни', r:[{k:'maze',q:'Доведи волшебника до двери',size:5}]},
+{n:139,w:13,t:'Цифры по порядку', r:[{k:'word',q:'Лови цифры по порядку: 1…5',w:'12345',digits:true,speed:1}]},
+{n:140,w:13,t:'БОСС: Урок магии', r:[
+    {k:'seq',q:'Продолжи узор',pattern:['🪄','✨','✨','🪄','✨'],opts:['🪄','✨','🔮'],ans:'✨'},
+    {k:'diff',q:'Найди отличие',set:['🔮','🪄','✨','📜','🕯️','🗝️'],cols:3,rows:2},
+    {k:'maze',q:'Доведи до выхода',size:6}]},
+
+/* ===== МИР 15. Остров сокровищ (141–150) ===== */
+{n:141,w:14,t:'Найди отличие на карте', r:[{k:'diff',q:'Найди отличие',set:['🗺️','🧭','⚓','🪙','🦜','🏝️'],cols:3,rows:2}]},
+{n:142,w:14,t:'Сколько монет?', r:[{k:'choice',q:'Сколько монет в сундуке?',visual:'🪙🪙🪙🪙🪙🪙🪙',opts:['6','7','8'],ans:'7'}]},
+{n:143,w:14,t:'Лови монеты', r:[c('Лови монеты, акул не трогай!',['🪙','💰'],['🦈','🐙'],9,{speed:1.1,rate:870})]},
+{n:144,w:14,t:'Точки-маршрут', r:[{k:'dots',q:'Соедини точки по порядку',count:9}]},
+{n:145,w:14,t:'Добыча', r:[{k:'sort',q:'Разложи добычу',
+    bins:[{e:'💎',match:['💎','🪙','👑']},{e:'🐚',match:['🐚','🦀','🐠']}],
+    items:['💎','🐚','🪙','🦀','👑','🐠'],need:6,rate:1800}]},
+{n:146,w:14,t:'Найди отличие (сложнее)', r:[{k:'diff',q:'Найди отличие',set:['🗺️','🧭','⚓','🪙','🦜','🏝️','💎','🐙'],cols:4,rows:2}]},
+{n:147,w:14,t:'Слово КЛАД', r:[{k:'word',q:'Собери слово КЛАД',w:'КЛАД'}]},
+{n:148,w:14,t:'Барабан пиратов', r:[{k:'rhythm',q:'Лови ноты, когда горит жёлтый пояс!',good:['🎵','🎶'],bad:['🪘'],need:6,speed:.85,rate:1150}]},
+{n:149,w:14,t:'Лабиринт пещеры', r:[{k:'maze',q:'Дойди до сундука',size:6}]},
+{n:150,w:14,t:'БОСС: Сокровищница', r:[
+    {k:'diff',q:'Найди отличие',set:['💎','🪙','👑','🗝️','📜','⚓'],cols:3,rows:2},
+    c('Лови монеты!',['🪙'],['🦈'],7,{speed:1.1,rate:870}),
+    {k:'maze',q:'Дойди до сундука',size:6}]},
+
+/* ===== МИР 16. Весёлая ферма (151–160) ===== */
+{n:151,w:15,t:'Овощи и фрукты', r:[{k:'sort',q:'Разложи урожай',
+    bins:[{e:'🥕',match:['🥕','🥒','🍅','🥔']},{e:'🍎',match:['🍎','🍐','🍇','🍑']}],
+    items:['🥕','🍎','🥒','🍐','🍅','🍇','🥔','🍑'],need:8,rate:1900}]},
+{n:152,w:15,t:'Лови яйца', r:[c('Лови яйца, камни пропускай',['🥚'],['🪨'],8,{speed:1,rate:900})]},
+{n:153,w:15,t:'Сколько цыплят?', r:[{k:'choice',q:'Сколько цыплят?',visual:'🐤🐤🐤🐤',opts:['3','4','5'],ans:'4'}]},
+{n:154,w:15,t:'Пары на ферме', r:[{k:'mem',q:'Найди пары',set:['🐄','🐔','🐖','🐑','🐴','🦆']}]},
+{n:155,w:15,t:'Слово КОЗА', r:[{k:'word',q:'Собери слово КОЗА',w:'КОЗА'}]},
+{n:156,w:15,t:'Узор поля', r:[{k:'seq',q:'Продолжи узор',pattern:['🌾','🌻','🌾','🌻'],opts:['🌾','🌻','🌽'],ans:'🌾'}]},
+{n:157,w:15,t:'Лабиринт по полю', r:[{k:'maze',q:'Дойди до домика',size:5}]},
+{n:158,w:15,t:'Точки', r:[{k:'dots',q:'Соедини точки по порядку',count:8}]},
+{n:159,w:15,t:'Молоко и жуки', r:[c('Лови молоко, жуков не трогай!',['🥛','🧀'],['🐛','🪰'],9,{speed:1.05,rate:880})]},
+{n:160,w:15,t:'БОСС: Утро на ферме', r:[
+    {k:'sort',q:'Разложи урожай',bins:[{e:'🥕',match:['🥕','🥒']},{e:'🍎',match:['🍎','🍐']}],
+     items:['🥕','🍎','🥒','🍐'],need:4,rate:1600},
+    {k:'maze',q:'Дойди до домика',size:6},
+    {k:'mem',q:'Найди пары',set:['🐄','🐔','🐖','🐑']}]},
+
+/* ===== МИР 17. Уборка дома (161–170) ===== */
+{n:161,w:16,t:'Игрушки по местам', r:[{k:'sort',q:'Разложи игрушки',
+    bins:[{e:'🧸',match:['🧸','🪀','🎈']},{e:'🚗',match:['🚗','🚂','🚁']}],
+    items:['🧸','🚗','🪀','🚂','🎈','🚁'],need:6,rate:1800}]},
+{n:162,w:16,t:'Лабиринт пылесоса', r:[{k:'maze',q:'Проведи пылесос по комнате',size:5}]},
+{n:163,w:16,t:'Что лишнее?', r:[{k:'odd',q:'Что не для уборки?',items:['🧹','🧽','🧺','🍕'],ans:3}]},
+{n:164,w:16,t:'Лови носки', r:[c('Лови носки, а лужи пропускай',['🧦'],['💧','🪣'],8,{speed:1,rate:900})]},
+{n:165,w:16,t:'Найди отличие', r:[{k:'diff',q:'Найди отличие',set:['🧹','🧽','🧺','🪣','🧴','🧼'],cols:3,rows:2}]},
+{n:166,w:16,t:'Сортируем мусор', r:[{k:'sort',q:'Разложи мусор по бакам',
+    bins:[{e:'📄',match:['📄','📰','📦']},{e:'🥤',match:['🥤','🧴','🛍️']},{e:'🍾',match:['🍾','🫙','🍶']}],
+    items:['📄','🥤','🍾','📰','🧴','🫙','📦','🛍️','🍶'],need:8,rate:1950}]},
+{n:167,w:16,t:'Слово ДОМ', r:[{k:'word',q:'Собери слово ДОМ',w:'ДОМ'}]},
+{n:168,w:16,t:'Пары вещей', r:[{k:'mem',q:'Найди пары',set:['🧹','🧽','🧺','🔑','🪑','🛏️']}]},
+{n:169,w:16,t:'Ритм уборки', r:[{k:'rhythm',q:'Лови ноты, когда горит жёлтый пояс!',good:['🎵','🎶'],bad:['🧦'],need:6,speed:.9,rate:1100}]},
+{n:170,w:16,t:'БОСС: Большая уборка', r:[
+    {k:'sort',q:'Разложи вещи',bins:[{e:'🧸',match:['🧸','🪀']},{e:'🧦',match:['🧦','👕']}],
+     items:['🧸','🧦','🪀','👕'],need:4,rate:1600},
+    {k:'maze',q:'Дойди до кладовки',size:6},
+    {k:'diff',q:'Найди отличие',set:['🧹','🧽','🧺','🪣','🧴','🧼'],cols:3,rows:2}]},
+
+/* ===== МИР 18. Город ПДД (171–180) ===== */
+{n:171,w:17,t:'Зелёный свет', r:[c('Лови зелёный свет — на красный нельзя!',['🟢'],['🔴','🟡'],7,{speed:1.05,rate:880})]},
+{n:172,w:17,t:'Транспорт', r:[{k:'sort',q:'Едет, летит или плывёт?',
+    bins:[{e:'🚗',match:['🚗','🚌','🚲']},{e:'✈️',match:['✈️','🚁','🚀']},{e:'⛵',match:['⛵','🚢','🛶']}],
+    items:['🚗','✈️','⛵','🚌','🚁','🚢','🚲','🚀','🛶'],need:8,rate:1950}]},
+{n:173,w:17,t:'Кто где идёт?', r:[{k:'choice',q:'Кто должен идти по пешеходному переходу?',opts:['🚶','🚗','🚲'],ans:'🚶'}]},
+{n:174,w:17,t:'Лабиринт дороги', r:[{k:'maze',q:'Доведи пешехода до дома',size:6}]},
+{n:175,w:17,t:'Слово ДОРОГА', r:[{k:'word',q:'Собери слово ДОРОГА',w:'ДОРОГА',speed:1.1}]},
+{n:176,w:17,t:'Дорожные знаки', r:[c('Лови только круглые знаки',['🔴','🚫','⛔'],['🟨','🔺','🚸'],8,{speed:1.1,rate:870})]},
+{n:177,w:17,t:'Найди отличие', r:[{k:'diff',q:'Найди отличие',set:['🚦','🚗','🚌','🚲','🛴','🚏'],cols:3,rows:2}]},
+{n:178,w:17,t:'Точки-маршрут', r:[{k:'dots',q:'Соедини точки по порядку',count:8}]},
+{n:179,w:17,t:'Пары знаков', r:[{k:'mem',q:'Найди пары',set:['🚦','🚏','🛑','⛔','🚸','🅿️']}]},
+{n:180,w:17,t:'БОСС: Безопасный город', r:[
+    c('Лови зелёный!',['🟢'],['🔴'],6,{speed:1.1,rate:870}),
+    {k:'maze',q:'Дойди до дома',size:6},
+    {k:'sort',q:'Разложи транспорт',bins:[{e:'🚗',match:['🚗','🚌']},{e:'✈️',match:['✈️','🚁']}],
+     items:['🚗','✈️','🚌','🚁'],need:4,rate:1600}]},
+
+/* ===== МИР 19. Подводный мир (181–190) ===== */
+{n:181,w:18,t:'Соедини рыбку', r:[{k:'dots',q:'Соедини точки по порядку — получится рыбка',count:10}]},
+{n:182,w:18,t:'Пары моря', r:[{k:'mem',q:'Найди пары',set:['🐠','🐡','🐙','🦀','🐬','🐳']}]},
+{n:183,w:18,t:'Лови рыбок', r:[c('Лови рыбок, медуз не трогай!',['🐠','🐟','🐡'],['🪼','🗑️'],9,{speed:1.05,rate:880})]},
+{n:184,w:18,t:'Море и суша', r:[{k:'sort',q:'Кто живёт в море, а кто на суше?',
+    bins:[{e:'🌊',match:['🐠','🐬','🐙','🦈']},{e:'🌳',match:['🐘','🦒','🐒','🦁']}],
+    items:['🐠','🐘','🐬','🦒','🐙','🐒','🦈','🦁'],need:8,rate:1900}]},
+{n:185,w:18,t:'Сколько рыбок?', r:[{k:'choice',q:'Сколько рыбок плывёт?',visual:'🐟🐟🐟🐟🐟',opts:['4','5','6'],ans:'5'}]},
+{n:186,w:18,t:'Слово КРАБ', r:[{k:'word',q:'Собери слово КРАБ',w:'КРАБ'}]},
+{n:187,w:18,t:'Узор волн', r:[{k:'seq',q:'Продолжи узор',pattern:['🌊','🐚','🌊','🐚'],opts:['🌊','🐚','🐠'],ans:'🌊'}]},
+{n:188,w:18,t:'Ритм волн', r:[{k:'rhythm',q:'Лови ноты, когда горит жёлтый пояс!',good:['🎵','🎶'],bad:['🫧'],need:6,speed:.9,rate:1100}]},
+{n:189,w:18,t:'Найди отличие', r:[{k:'diff',q:'Найди отличие',set:['🐠','🐙','🦀','🐬','🐳','🦈','🐚','🪸'],cols:4,rows:2}]},
+{n:190,w:18,t:'БОСС: Затонувший город', r:[
+    {k:'dots',q:'Соедини точки',count:10},
+    {k:'diff',q:'Найди отличие',set:['🐠','🐙','🦀','🐬','🐳','🦈'],cols:3,rows:2},
+    c('Лови рыбок!',['🐠'],['🪼'],7,{speed:1.1,rate:870})]},
+
+/* ===== МИР 20. Радужный фестиваль (191–200) ===== */
+{n:191,w:19,t:'Звёздный дождь', r:[c('Лови звёзды, кометы пропускай',['⭐','🌟'],['☄️'],10,{speed:1.2,rate:830})]},
+{n:192,w:19,t:'Ритм фестиваля', r:[{k:'rhythm',q:'Лови ноты, когда горит жёлтый пояс!',good:['🎵','🎶'],bad:['☄️'],need:8,speed:1,rate:1000}]},
+{n:193,w:19,t:'Точки-салют', r:[{k:'dots',q:'Соедини точки по порядку',count:10}]},
+{n:194,w:19,t:'Лабиринт праздника', r:[{k:'maze',q:'Дойди до сцены',size:7}]},
+{n:195,w:19,t:'Найди отличие', r:[{k:'diff',q:'Найди отличие',set:['🎈','🎉','🎁','🎂','🍭','🎪','🎠','🎨'],cols:4,rows:2}]},
+{n:196,w:19,t:'Слово РАДУГА', r:[{k:'word',q:'Собери слово РАДУГА',w:'РАДУГА',speed:1.1}]},
+{n:197,w:19,t:'Восемь пар', r:[{k:'mem',q:'Найди все пары',set:['🌈','🎈','🎉','🎁','⭐','🌟','🎂','🍭']}]},
+{n:198,w:19,t:'Сортировка по цветам', r:[{k:'sort',q:'Разложи по цветам',
+    bins:[{e:'🔴',match:['🍎','🌹','🍓']},{e:'🟡',match:['🍋','🌻','⭐']},{e:'🔵',match:['🫐','💙','🐳']}],
+    items:['🍎','🍋','🫐','🌹','🌻','💙','🍓','⭐','🐳'],need:8,rate:1950}]},
+{n:199,w:19,t:'Сложный узор', r:[{k:'seq',q:'Продолжи узор',pattern:['🌈','⭐','🎈','🌈','⭐'],opts:['🌈','⭐','🎈'],ans:'🎈'}]},
+{n:200,w:19,t:'ФИНАЛ: Радужный фестиваль', r:[
+    {k:'rhythm',q:'Лови ноты, когда горит жёлтый пояс!',good:['🎵','🎶'],bad:['☄️'],need:6,speed:.95,rate:1050},
+    {k:'dots',q:'Соедини точки',count:10},
+    {k:'word',q:'Собери слово ФЕСТИВАЛЬ',w:'ФЕСТИВАЛЬ',speed:1.1},
+    {k:'diff',q:'Найди отличие',set:['🌈','🎈','🎉','🎁','⭐','🌟','🎂','🍭'],cols:4,rows:2}]},
 ];
 
 /* ---------- 3. ЗВАНИЯ ---------- */
@@ -420,15 +665,108 @@ const RANKS = [
   {s:201,n:'Мастер Профессий',     e:'🛠️'},
   {s:236,n:'Музыкальная Звезда',   e:'🎵'},
   {s:266,n:'Хранитель Радуги',     e:'🌈'},
-  {s:291,n:'Легенда Лукошка',      e:'👑'},
+  {s:291,n:'Звёздный Хранитель',   e:'💫'},
+  {s:330,n:'Хранитель Времён',     e:'⏰'},
+  {s:370,n:'Мастер Сказок',        e:'📖'},
+  {s:410,n:'Пират Знаний',         e:'🏴‍☠️'},
+  {s:450,n:'Фермер-Эрудит',        e:'🌾'},
+  {s:490,n:'Инженер Дорог',        e:'🚦'},
+  {s:530,n:'Властелин Глубин',     e:'🐡'},
+  {s:570,n:'Легенда Лукошка',      e:'👑'},
 ];
 const MAX_STARS = LEVELS.length*3;
 
+/* ---------- 3б. КОЛЛЕКЦИЯ ЁЖИКА (предметы открываются за звёзды) ---------- */
+const COLLECTION = [
+  {s:0,  e:'🧺', n:'Лукошко Тишки'},        {s:9,  e:'🎩', n:'Шапка'},
+  {s:20, e:'🧣', n:'Шарф'},           {s:32, e:'👟', n:'Ботинки'},
+  {s:45, e:'🎒', n:'Рюкзак'},         {s:60, e:'🔦', n:'Фонарик'},
+  {s:76, e:'🕶️', n:'Очки'},           {s:92, e:'🧤', n:'Перчатки'},
+  {s:110,e:'🥕', n:'Морковка'},       {s:128,e:'🍯', n:'Горшочек мёда'},
+  {s:146,e:'🎈', n:'Шарик'},          {s:165,e:'🪁', n:'Воздушный змей'},
+  {s:184,e:'🛴', n:'Самокат'},        {s:204,e:'🚲', n:'Велосипед'},
+  {s:224,e:'🎨', n:'Краски'},         {s:244,e:'🥁', n:'Барабан'},
+  {s:264,e:'🎸', n:'Гитара'},         {s:284,e:'🔭', n:'Телескоп'},
+  {s:304,e:'🧭', n:'Компас'},         {s:324,e:'🗺️', n:'Карта'},
+  {s:344,e:'🏕️', n:'Палатка'},        {s:364,e:'🐣', n:'Дружок-цыплёнок'},
+  {s:384,e:'🐢', n:'Черепашка'},      {s:404,e:'🦜', n:'Попугай'},
+  {s:424,e:'🐬', n:'Дельфин'},        {s:444,e:'🦕', n:'Динозаврик'},
+  {s:464,e:'🏰', n:'Замок'},          {s:484,e:'🚀', n:'Ракета'},
+  {s:504,e:'🛸', n:'Летающая тарелка'},{s:524,e:'🌟', n:'Звезда'},
+  {s:544,e:'👑', n:'Корона'},         {s:564,e:'🌈', n:'Радуга'},
+  {s:584,e:'🏆', n:'Кубок'},          {s:600,e:'💎', n:'Алмаз'},
+];
+function collectionIndex(stars){ let n=0; for(const it of COLLECTION) if(stars>=it.s) n++; return n; }
+function nextCollection(stars){ for(const it of COLLECTION) if(stars<it.s) return it; return null; }
+
+/* ---------- 3в. НАВЫКИ (для родительского уголка) ---------- */
+const SKILLS = {
+  attention:'Внимание и реакция', letters:'Буквы и чтение', numbers:'Счёт',
+  memory:'Память', logic:'Логика и обобщение', patterns:'Закономерности',
+  world:'Знания о мире', motor:'Мелкая моторика', rhythm:'Чувство ритма'
+};
+const KIND_SKILL = {
+  catch:'attention', word:'letters', sort:'logic', mem:'memory', odd:'logic',
+  seq:'patterns', choice:'world', diff:'attention', dots:'numbers', maze:'motor', rhythm:'rhythm'
+};
+
 /* ---------- 4. СОХРАНЕНИЕ ---------- */
-const SAVE_KEY = 'lukoshko_v1';
-let save = {levels:{}, sound:true};
-try{ const s = JSON.parse(localStorage.getItem(SAVE_KEY)); if(s && s.levels) save = Object.assign(save,s); }catch(e){}
+const SAVE_KEY = 'lukoshko_v2';
+let save = {levels:{}, sound:true, skills:{}, daily:null, medals:0, seen:{}};
+try{ const s = JSON.parse(localStorage.getItem(SAVE_KEY) || localStorage.getItem('lukoshko_v1'));
+     if(s && s.levels) save = Object.assign(save, s); }catch(e){}
 function persist(){ try{ localStorage.setItem(SAVE_KEY, JSON.stringify(save)); }catch(e){} }
+
+/* учёт навыков: ok — верно, miss — ошибка */
+function skillMark(kind, ok){
+  const key = KIND_SKILL[kind] || 'attention';
+  const st = save.skills[key] || (save.skills[key] = {ok:0, miss:0});
+  if(ok) st.ok++; else st.miss++;
+  persist();
+}
+
+/* ---------- ежедневные задания ---------- */
+function todayStr(){
+  const d = new Date();
+  return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+}
+function ensureDaily(){
+  const t = todayStr();
+  if(!save.daily || save.daily.d !== t){
+    // три коротких задания: конкретный уровень, «без ошибок», «сыграй 2 уровня»
+    const done = new Set(); const pickLv = [];
+    let n = 1; for(let i=1;i<=LEVELS.length && pickLv.length<1;i++){
+      const st = save.levels[i];
+      if(st && st.stars) continue;
+      pickLv.push(i); break;
+    }
+    if(!pickLv.length) pickLv.push(1 + Math.floor(Math.random()*LEVELS.length));
+    save.daily = {d:t, tasks:[
+      {k:'lvl', n:pickLv[0], label:'Пройди уровень '+pickLv[0], done:false},
+      {k:'perfect', label:'Пройди уровень без ошибок', done:false},
+      {k:'play', need:2, got:0, label:'Сыграй 2 уровня', done:false}
+    ], prize:false};
+    persist();
+  }
+  return save.daily;
+}
+function dailyProgress(){
+  const d = ensureDaily();
+  return d.tasks.filter(t=>t.done).length;
+}
+function dailyTick(levelN, errs){
+  const d = ensureDaily();
+  let changed = false;
+  for(const t of d.tasks){
+    if(t.done) continue;
+    if(t.k==='lvl' && t.n===levelN){ t.done=true; changed=true; }
+    if(t.k==='perfect' && errs===0){ t.done=true; changed=true; }
+    if(t.k==='play'){ t.got=(t.got||0)+1; if(t.got>=t.need){ t.done=true; } changed=true; }
+  }
+  if(d.tasks.every(t=>t.done) && !d.prize){ d.prize=true; save.medals=(save.medals||0)+1; changed=true; }
+  if(changed) persist();
+  return d;
+}
 function totalStars(){ let t=0; for(const k in save.levels) t += save.levels[k].stars||0; return t; }
 function rankFor(stars){ let r=RANKS[0]; for(const x of RANKS) if(stars>=x.s) r=x; return r; }
 function nextRank(stars){ for(const x of RANKS) if(stars<x.s) return x; return null; }
@@ -508,9 +846,40 @@ function startLevel(n){
   startRound(0);
 }
 
+/* лабиринт: DFS-генерация, стены справа/снизу */
+function makeMaze(n){
+  const cells=n*n, right={}, down={};
+  for(let i=0;i<cells;i++){ right[i]=true; down[i]=true; }
+  const vis=new Array(cells).fill(false);
+  const st=[0]; vis[0]=true;
+  while(st.length){
+    const cur=st[st.length-1], cx=cur%n, cy=Math.floor(cur/n);
+    const nb=[];
+    if(cx>0 && !vis[cur-1]) nb.push([cur-1,'L']);
+    if(cx<n-1 && !vis[cur+1]) nb.push([cur+1,'R']);
+    if(cy>0 && !vis[cur-n]) nb.push([cur-n,'U']);
+    if(cy<n-1 && !vis[cur+n]) nb.push([cur+n,'D']);
+    if(!nb.length){ st.pop(); continue; }
+    const [nx,dir]=nb[Math.floor(Math.random()*nb.length)];
+    if(dir==='R') right[cur]=false;
+    if(dir==='L') right[nx]=false;
+    if(dir==='D') down[cur]=false;
+    if(dir==='U') down[nx]=false;
+    vis[nx]=true; st.push(nx);
+  }
+  return {n, right, down, pos:0, goal:cells-1, trail:[0]};
+}
+
+const MAZE_LOOK = {10:['🦕','🥚'],11:['🐒','🍌'],12:['🧒','🏡'],13:['🧙','🚪'],14:['🦜','💎'],
+                   15:['🧑‍🌾','🏡'],16:['🧹','🧺'],17:['🚶','🏡'],18:['🐠','🏝️'],19:['🎈','🎪']};
 function startRound(i){
   G.ri=i;
   const spec = G.level.r[i];
+  if(spec.k==='maze'){
+    const look = MAZE_LOOK[G.level.w] || ['🦔','🏡'];
+    spec.heroEmoji = spec.heroEmoji || look[0];
+    spec.goalEmoji = spec.goalEmoji || look[1];
+  }
   R = {spec:k2(spec), items:[], t:0, spawnT:0, done:0, idx:0, drag:null, need:0,
        cards:[], flipped:[], matched:0, locked:false, answered:false, cele:0, sel:[]};
   document.getElementById('barFill').style.width='0%';
@@ -535,6 +904,36 @@ function startRound(i){
     const deck = set.concat(set).map(e=>({e, open:false, done:false}));
     for(let i=deck.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[deck[i],deck[j]]=[deck[j],deck[i]];}
     R.cards=deck; R.need=set.length;
+  }
+  if(spec.k==='diff'){
+    const cols=spec.cols||3, rows=spec.rows||2, total=cols*rows;
+    const set=spec.set.slice();
+    const base=[]; for(let i=0;i<total;i++) base.push(pick(set));
+    const idx=Math.floor(Math.random()*total);
+    const repl=pick(set.filter(e=>e!==base[idx]));
+    const right=base.slice(); right[idx]=repl;
+    R.diff={base,right,idx,cols,rows};
+    R.need=1;
+  }
+  if(spec.k==='dots'){
+    R.need = spec.count||8;
+    const n=R.need, cx=Wd/2, cy=Hd*0.54;
+    const rx=Math.min(Wd*0.34, 300), ry=Math.min(Hd*0.26, 210);
+    const list=[];
+    for(let i=0;i<n;i++){
+      const a=-Math.PI/2 + i*(Math.PI*2/n);
+      list.push({n:i+1, x:cx+Math.cos(a)*rx*rnd(0.9,1.02), y:cy+Math.sin(a)*ry*rnd(0.9,1.02), done:false});
+    }
+    R.dots={list, next:1, drew:0};
+    R.need=n;
+  }
+  if(spec.k==='maze'){
+    R.maze = makeMaze(spec.size||5);
+    R.need = 1;
+  }
+  if(spec.k==='rhythm'){
+    R.need = spec.need||6;
+    R.beat = {t:0, period: spec.period||1300, on: spec.beat||560, glow:true};
   }
   updateHUD();
 }
@@ -562,6 +961,7 @@ function updateHUD(){
 
 /* ---- помощь: правильное/неправильное ---- */
 function goodAction(word){
+  if(R) skillMark(R.spec.k, true);
   G.combo++;
   const mult = 1 + Math.min(4, Math.floor(G.combo/3))*0.5;
   G.score += Math.round(10*mult);
@@ -572,6 +972,7 @@ function goodAction(word){
   updateHUD();
 }
 function badAction(){
+  if(R) skillMark(R.spec.k, false);
   G.errs++; G.combo=0; G.hearts--;
   sfxWrong();
   if(navigator.vibrate) navigator.vibrate(60);
@@ -592,12 +993,20 @@ function finishRound(){
 
 function finishLevel(passed){
   const stars = G.errs<=1?3 : G.errs<=4?2 : 1;
+  const starsBefore = totalStars();
+  const medalsBefore = save.medals||0;
   const best = save.levels[G.level.n];
   const prevStars = best?best.stars:0;
   if(!best || stars>best.stars || G.score>(best.best||0)){
     save.levels[G.level.n] = {stars:Math.max(stars, prevStars), best:Math.max(G.score, best?best.best||0:0)};
     persist();
   }
+  // новые предметы коллекции и задания дня
+  const starsAfter = totalStars();
+  G.unlocked = COLLECTION.filter(it=> it.s>starsBefore && it.s<=starsAfter);
+  G.daily = dailyTick(G.level.n, G.errs);
+  G.dailyPrize = (save.medals||0) > medalsBefore;
+
   G.screen='result';
   document.getElementById('hud').classList.add('hidden');
   document.getElementById('prompt').classList.add('hidden');
@@ -631,7 +1040,7 @@ function update(dt){
 
   const sp = R.spec;
 
-  if(sp.k==='catch'||sp.k==='word'){
+  if(sp.k==='catch'||sp.k==='word'||sp.k==='rhythm'){
     const speed = sp.speed||1;
     const interval = (sp.rate||900)/speed;
     R.spawnT += dt*1000;
@@ -645,12 +1054,24 @@ function update(dt){
     }
     // ловля
     const top = cG.y-46;
+    // ритм: «пояс» периодически загорается
+    if(sp.k==='rhythm'){
+      R.beat.t += dt*1000;
+      const ph = R.beat.t % R.beat.period;
+      R.beat.glow = ph < R.beat.on;
+      R.beat.phase = ph / R.beat.period;
+    }
     for(const it of R.items){
       if(it.dead) continue;
       if(it.y>top-20 && it.y<top+62 && Math.abs(it.x-cG.x)<78){
         it.dead=true;
-        handleCatch(it);
-      } else if(it.y>Hd+50){ it.dead=true; /* пропущено */ }
+        if(sp.k==='rhythm'){
+          if(it.good){
+            if(R.beat.glow) goodAction();
+            else { toast('Лови, когда горит пояс ✨'); tone(300,0.1,'sine',0.08); }
+          } else badAction();
+        } else handleCatch(it);
+      } else if(it.y>Hd+50){ it.dead=true; }
     }
     R.items = R.items.filter(i=>!i.dead);
   }
@@ -840,7 +1261,7 @@ function drawRound(){
   if(!R) return;
   const sp=R.spec;
 
-  if(sp.k==='catch'||sp.k==='word'||sp.k==='sort'){
+  if(sp.k==='catch'||sp.k==='word'||sp.k==='sort'||sp.k==='rhythm'){
     for(const it of R.items) drawItem(it);
   }
 
@@ -865,11 +1286,15 @@ function drawRound(){
     }
   }
 
-  if(sp.k==='catch'||sp.k==='word') drawCatcher();
+  if(sp.k==='catch'||sp.k==='word'||sp.k==='rhythm') drawCatcher();
+  if(sp.k==='rhythm') drawRing();
 
   if(sp.k==='sort') drawSortBins();
   if(sp.k==='mem') drawCards();
   if(sp.k==='odd'||sp.k==='seq'||sp.k==='choice') drawQuiz();
+  if(sp.k==='diff') drawDiff();
+  if(sp.k==='dots') drawDots();
+  if(sp.k==='maze') drawMaze();
 }
 
 function drawSortBins(){
@@ -989,7 +1414,150 @@ function drawQuiz(){
   }
 }
 
+/* «жёлтый пояс» для ритм-ловли */
+function drawRing(){
+  const cG=G.catcher;
+  const y=cG.y-46;
+  const b=R.beat||{glow:false,phase:0};
+  const on=b.glow;
+  ctx.save();
+  const a = on? 0.55 : 0.12;
+  const grd=ctx.createLinearGradient(0,y-48,0,y+48);
+  grd.addColorStop(0,'rgba(255,217,61,0)');
+  grd.addColorStop(0.5,'rgba(255,217,61,'+a+')');
+  grd.addColorStop(1,'rgba(255,217,61,0)');
+  ctx.fillStyle=grd; ctx.fillRect(0,y-48,Wd,96);
+  ctx.beginPath();
+  ctx.moveTo(0,y); ctx.lineTo(Wd,y);
+  ctx.strokeStyle = on? 'rgba(255,190,0,.95)':'rgba(255,190,0,.35)';
+  ctx.lineWidth = on? 8 : 3;
+  ctx.setLineDash(on? [] : [12,12]);
+  ctx.stroke();
+  if(on){
+    ctx.beginPath();
+    ctx.ellipse(cG.x, y, 92, 20, 0, 0, 7);
+    ctx.strokeStyle='rgba(255,150,0,.9)'; ctx.lineWidth=6; ctx.stroke();
+  }
+  ctx.restore();
+}
+
+/* найди отличие: слева образец, справа изменённая картинка */
+function drawDiff(){
+  const d=R.diff;
+  const cols=d.cols, rows=d.rows;
+  const gap=10;
+  const wide=Wd>760;
+  const boardW = wide? (Wd-140)/2 : Wd-60;
+  const cell = Math.min( wide? (boardW-(cols-1)*gap)/cols : (boardW-(cols-1)*gap)/cols,
+                         wide? (Hd-300)/rows : (Hd-460)/rows, 92);
+  const bw = cols*cell+(cols-1)*gap, bh = rows*cell+(rows-1)*gap;
+  const top = Math.max(UI.promptBottom+24, 110);
+  let bx1, bx2, by;
+  if(wide){
+    const total=2*bw+50;
+    bx1=Wd/2-total/2; bx2=bx1+bw+50;
+    by=top+Math.max(0,(Hd-top-120-bh)/2);
+  } else {
+    bx1=Wd/2-bw/2; bx2=bx1;
+    by=top+10;
+  }
+  R._diffRects=[];
+  const drawBoard=(bx,by,arr,interactive)=>{
+    ctx.save();
+    ctx.beginPath(); ctx.roundRect(bx-8,by-8,bw+16,bh+16,16);
+    ctx.fillStyle='rgba(255,255,255,.75)'; ctx.fill();
+    ctx.restore();
+    for(let i=0;i<arr.length;i++){
+      const cx=bx+(i%cols)*(cell+gap), cy=by+Math.floor(i/cols)*(cell+gap);
+      ctx.save();
+      ctx.beginPath(); ctx.roundRect(cx,cy,cell,cell,12);
+      ctx.fillStyle='#fff'; ctx.fill();
+      ctx.lineWidth=3; ctx.strokeStyle='rgba(110,140,190,.35)'; ctx.stroke();
+      ctx.font=Math.round(cell*0.62)+'px '+EMOJI_FONT;
+      ctx.textAlign='center'; ctx.textBaseline='middle';
+      ctx.fillText(arr[i], cx+cell/2, cy+cell/2);
+      ctx.restore();
+      if(interactive) R._diffRects.push({x:cx,y:cy,w:cell,h:cell,i});
+    }
+  };
+  const off = wide? 0 : bh+70;
+  drawBoard(bx1, by, d.base, false);
+  drawBoard(bx2, by+off, d.right, true);
+  ctx.save();
+  ctx.fillStyle='#4a3a6a'; ctx.font='bold 16px "Nunito",system-ui,sans-serif';
+  ctx.textAlign='center';
+  ctx.fillText('образец', bx1+bw/2, by-18);
+  ctx.fillText('найди отличие', bx2+bw/2, by+off-18);
+  ctx.restore();
+}
+
+/* соедини точки по порядку */
+function drawDots(){
+  const d=R.dots;
+  if(d.drew===0 || !d._pts) d._pts=[];
+  ctx.save();
+  ctx.lineWidth=6; ctx.strokeStyle='rgba(255,170,0,.85)'; ctx.lineCap='round';
+  ctx.beginPath();
+  let started=false;
+  for(const p of d.list){
+    if(p.done){ if(!started){ ctx.moveTo(p.x,p.y); started=true; } else ctx.lineTo(p.x,p.y); }
+  }
+  ctx.stroke();
+  for(const p of d.list){
+    ctx.beginPath(); ctx.arc(p.x,p.y, p.done?26:22, 0, 7);
+    ctx.fillStyle = p.done? '#7be36a' : (p.n===d.next? '#ffd93d':'#ffffff');
+    ctx.fill();
+    ctx.lineWidth=4; ctx.strokeStyle='rgba(90,110,160,.45)'; ctx.stroke();
+    ctx.fillStyle='#3a2a5a';
+    ctx.font='bold 22px "Nunito",system-ui,sans-serif';
+    ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.fillText(String(p.n), p.x, p.y+1);
+  }
+  ctx.restore();
+}
+
+/* лабиринт */
+function drawMaze(){
+  const m=R.maze, n=m.n;
+  const top=Math.max(UI.promptBottom+26, 120);
+  const availW=Wd-60, availH=Hd-top-70;
+  const cell=Math.min(availW/n, availH/n, 96);
+  const ox=Wd/2-(n*cell)/2, oy=top+Math.max(0,(availH-n*cell)/2);
+  m._cell=cell; m._ox=ox; m._oy=oy;
+  ctx.save();
+  // фон
+  ctx.beginPath(); ctx.roundRect(ox-10,oy-10,n*cell+20,n*cell+20,18);
+  ctx.fillStyle='rgba(255,255,255,.72)'; ctx.fill();
+  // клетки
+  for(let i=0;i<n*n;i++){
+    const cx=i%n, cy=Math.floor(i/n);
+    const x=ox+cx*cell, y=oy+cy*cell;
+    const inTrail=m.trail.includes(i);
+    ctx.fillStyle = inTrail? 'rgba(255,217,61,.30)':'rgba(255,255,255,.55)';
+    ctx.fillRect(x+2,y+2,cell-4,cell-4);
+  }
+  // стены
+  ctx.strokeStyle='#7a6aa0'; ctx.lineWidth=5; ctx.lineCap='round';
+  for(let i=0;i<n*n;i++){
+    const cx=i%n, cy=Math.floor(i/n);
+    const x=ox+cx*cell, y=oy+cy*cell;
+    if(m.right[i]){ ctx.beginPath(); ctx.moveTo(x+cell,y); ctx.lineTo(x+cell,y+cell); ctx.stroke(); }
+    if(m.down[i]){ ctx.beginPath(); ctx.moveTo(x,y+cell); ctx.lineTo(x+cell,y+cell); ctx.stroke(); }
+    if(cy===0){ ctx.beginPath(); ctx.moveTo(x,y); ctx.lineTo(x+cell,y); ctx.stroke(); }
+    if(cx===0){ ctx.beginPath(); ctx.moveTo(x,y); ctx.lineTo(x,y+cell); ctx.stroke(); }
+  }
+  // финиш и герой
+  const gx=ox+(m.goal%n)*cell, gy=oy+Math.floor(m.goal/n)*cell;
+  ctx.font=Math.round(cell*0.6)+'px '+EMOJI_FONT;
+  ctx.textAlign='center'; ctx.textBaseline='middle';
+  ctx.fillText(R.spec.goalEmoji||'🚪', gx+cell/2, gy+cell/2);
+  const px=ox+(m.pos%n)*cell, py=oy+Math.floor(m.pos/n)*cell;
+  ctx.fillText(R.spec.heroEmoji||'🦔', px+cell/2, py+cell/2);
+  ctx.restore();
+}
+
 function drawParticles(){
+
   for(const p of G.particles){
     ctx.save(); ctx.globalAlpha=Math.max(0,p.life);
     ctx.translate(p.x,p.y); ctx.rotate(p.rot);
@@ -1037,6 +1605,9 @@ cvs.addEventListener('pointerdown', e=>{
   }
   if(sp.k==='mem'){ handleCardClick(p); return; }
   if(sp.k==='odd'||sp.k==='seq'||sp.k==='choice'){ handleQuizClick(p); return; }
+  if(sp.k==='diff'){ handleDiffClick(p); return; }
+  if(sp.k==='dots'){ handleDotsClick(p); return; }
+  if(sp.k==='maze'){ handleMazeClick(p); return; }
 
   G.catcher.tx = p.x; G.pointerOn=true; G.pointerX=p.x;
 });
@@ -1109,6 +1680,47 @@ function handleCardClick(p){
   }
 }
 
+function handleDiffClick(p){
+  if(R.locked) return;
+  for(const r of (R._diffRects||[])){
+    if(p.x>=r.x&&p.x<=r.x+r.w&&p.y>=r.y&&p.y<=r.y+r.h){
+      if(r.i===R.diff.idx){ goodAction(); }
+      else { badAction(); toast('Это одинаковое 🙈'); }
+      return;
+    }
+  }
+}
+
+function handleDotsClick(p){
+  if(R.locked) return;
+  const d=R.dots;
+  let hit=null;
+  for(const pt of d.list){ if(Math.hypot(pt.x-p.x, pt.y-p.y)<36) hit=pt; }
+  if(!hit) return;
+  if(hit.done) return;
+  if(hit.n===d.next){ hit.done=true; d.next++; d.drew++; sfxCard(); goodAction(); }
+  else { badAction(); toast('Ищи цифру '+d.next+' 🔍'); }
+}
+
+function handleMazeClick(p){
+  if(R.locked) return;
+  const m=R.maze, cell=m._cell, ox=m._ox, oy=m._oy;
+  if(cell==null) return;
+  const cx=Math.floor((p.x-ox)/cell), cy=Math.floor((p.y-oy)/cell);
+  if(cx<0||cy<0||cx>=m.n||cy>=m.n) return;
+  const target=cy*m.n+cx, cur=m.pos;
+  const ccx=cur%m.n, ccy=Math.floor(cur/m.n);
+  let ok=false;
+  if(target===cur+1 && cx===ccx+1 && !m.right[cur]) ok=true;
+  if(target===cur-1 && cx===ccx-1 && !m.right[cur-1]) ok=true;
+  if(target===cur+m.n && cy===ccy+1 && !m.down[cur]) ok=true;
+  if(target===cur-m.n && cy===ccy-1 && !m.down[cur-m.n]) ok=true;
+  if(!ok){ toast('Тут стена 🧱'); tone(230,0.08,'sine',0.07); return; }
+  m.pos=target; m.trail.push(target); sfxCard();
+  burst(ox+cx*cell+cell/2, oy+cy*cell+cell/2, ['✨'], 2);
+  if(target===m.goal) goodAction();
+}
+
 function handleQuizClick(p){
   if(R.locked||R.answered) return;
   const sp=R.spec;
@@ -1121,7 +1733,7 @@ function handleQuizClick(p){
         R.done=R.need; finishRound();
       } else {
         // не наказываем: мягкая подсказка + варианты перемешиваются
-        G.combo=0; sfxWrong(); toast('Попробуй ещё 🤔');
+        G.combo=0; sfxWrong(); skillMark(R.spec.k,false); toast('Попробуй ещё 🤔');
         if(sp.opts){ sp.opts = sp.opts.slice().sort(()=>Math.random()-0.5); }
         speak('Попробуй ещё раз');
       }
@@ -1134,12 +1746,12 @@ function handleQuizClick(p){
    14. ЭКРАНЫ
    ============================================================ */
 function showScreen(id){
-  ['scrMenu','scrMap','scrResult'].forEach(s=>{
+  ['scrMenu','scrMap','scrResult','scrHouse','scrParent'].forEach(s=>{
     document.getElementById(s).classList.toggle('hidden', s!==id);
   });
   // «домой» доступен с карты и с экрана результата
   const fab=document.getElementById('btnHome');
-  if(fab) fab.classList.toggle('show', id==='scrMap'||id==='scrResult');
+  if(fab) fab.classList.toggle('show', id==='scrMap'||id==='scrResult'||id==='scrHouse'||id==='scrParent');
 }
 
 function renderMenu(){
@@ -1151,6 +1763,7 @@ function renderMenu(){
   document.getElementById('rankInfo').textContent = nx
     ? st+' из '+MAX_STARS+' звёзд · до звания «'+nx.n+'» осталось '+(nx.s-st)
     : 'Все звёзды собраны! Ты — Легенда Лукошка 👑';
+  renderDaily();
 }
 
 function renderMap(){
@@ -1203,10 +1816,129 @@ function showResult(stars, passed){
   document.getElementById('resHint').textContent = stars===3
     ? 'Ты собрал все звёзды уровня! Так держать, '+lv.t+'.'
     : 'Попробуй ещё раз без ошибок — получишь 3 звезды!';
+  // дополнительные награды
+  const extra=document.getElementById('resExtra');
+  if(extra){
+    let html='';
+    if(G.unlocked && G.unlocked.length){
+      html += G.unlocked.map(it=>'<div class="resLine">🎁 Новый предмет: '+it.e+' '+it.n+'</div>').join('');
+    }
+    if(G.dailyPrize) html += '<div class="resLine">🍯 Все задания дня выполнены — медаль!</div>';
+    if(G.daily){
+      const dn=G.daily.tasks.filter(t=>t.done).length;
+      html += '<div class="resLine" style="color:#7a6a95">Задания дня: '+dn+' из 3</div>';
+    }
+    extra.innerHTML=html;
+  }
   const nextBtn=document.getElementById('btnNext');
-  nextBtn.style.display = (lv.n<100)?'inline-block':'none';
+  nextBtn.style.display = (lv.n<LEVELS.length)?'inline-block':'none';
   showScreen('scrResult');
   renderMenu();
+}
+
+
+/* ============================================================
+   14б. ПАНЕЛИ: задания дня, домик, родительский уголок
+   ============================================================ */
+/* ---------- ЕЖЕДНЕВНЫЕ ЗАДАНИЯ ---------- */
+function renderDaily(){
+  const d=ensureDaily();
+  const box=document.getElementById('dayBox');
+  if(!box) return;
+  box.innerHTML='';
+  d.tasks.forEach(t=>{
+    const b=document.createElement('button');
+    b.className='dayChip'+(t.done?' done':'');
+    b.textContent=(t.done?'✅ ':'⬜ ')+t.label;
+    b.onclick=()=>{
+      audio();
+      if(t.k==='lvl') startLevel(t.n);
+      else {
+        let n=1; for(let i=1;i<=LEVELS.length;i++){ if(!(save.levels[i]&&save.levels[i].stars)){ n=i; break; } }
+        startLevel(n);
+      }
+    };
+    box.appendChild(b);
+  });
+  const prize=document.createElement('div');
+  prize.className='dayChip'+(d.prize?' done':'');
+  prize.style.cursor='default';
+  prize.textContent = d.prize? '🍯 Приз дня получен!' : '🍯 Приз: медаль за все 3';
+  box.appendChild(prize);
+}
+
+/* ---------- ДОМИК ТИШКИ (коллекция) ---------- */
+function renderHouse(){
+  const st=totalStars();
+  document.getElementById('houseStars').textContent='⭐ '+st;
+  const idx=collectionIndex(st);
+  document.getElementById('houseSub').textContent =
+    'Открыто предметов: '+idx+' из '+COLLECTION.length+
+    '. За каждые новые звёзды Тишка получает вещь в домик.';
+  const g=document.getElementById('houseGrid');
+  g.innerHTML='';
+  COLLECTION.forEach(it=>{
+    const unlocked = st>=it.s;
+    const el=document.createElement('div');
+    el.className='hItem'+(unlocked?'':' locked');
+    el.innerHTML = '<div class="e">'+(unlocked? it.e:'🔒')+'</div>'+
+                   '<div class="n">'+(unlocked? it.n:'???')+'</div>'+
+                   (unlocked? '' : '<div class="need">⭐ '+it.s+'</div>');
+    g.appendChild(el);
+  });
+}
+
+/* ---------- ДЛЯ РОДИТЕЛЕЙ ---------- */
+function renderParent(){
+  const st=totalStars(), rk=rankFor(st), nx=nextRank(st);
+  document.getElementById('parentMedals').textContent='🍯 '+(save.medals||0);
+  const played=Object.keys(save.levels).length;
+  const perfect=Object.keys(save.levels).filter(k=>(save.levels[k].stars||0)===3).length;
+  let html='';
+  html+='<p class="sub" style="text-align:left">'+
+        'Пройдено уровней: <b>'+played+'</b> из '+LEVELS.length+' · собрано звёзд: <b>'+st+'</b> из '+MAX_STARS+
+        ' · уровней на 3 звезды: <b>'+perfect+'</b><br>'+
+        'Звание: <b>'+rk.e+' '+rk.n+'</b>'+(nx? ' · до «'+nx.n+'» — '+(nx.s-st)+' ⭐':'')+
+        ' · медалей за задания дня: <b>'+(save.medals||0)+'</b></p>';
+
+  const list=[];
+  for(const key in SKILLS){
+    const s0=save.skills[key]||{ok:0,miss:0};
+    const tot=s0.ok+s0.miss;
+    const pct=tot?Math.round(100*s0.ok/tot):null;
+    list.push({key,tot,pct,ok:s0.ok,miss:s0.miss});
+  }
+  const weak=list.filter(x=>x.tot>=8).sort((a,b)=>a.pct-b.pct)[0];
+  if(weak){
+    const kind=Object.keys(KIND_SKILL).find(k=>KIND_SKILL[k]===weak.key);
+    const lvls=LEVELS.filter(l=>l.r.some(r=>r.k===kind) && ((save.levels[l.n]||{}).stars||0)<3)
+                     .slice(0,3).map(l=>l.n);
+    if(lvls.length){
+      html+='<div class="advice">💡 Слабое место: '+SKILLS[weak.key].toLowerCase()+
+            ' ('+weak.pct+'% верных). Попробуйте уровни: '+
+            lvls.map(n=>'<b>'+n+'</b>').join(', ')+' — и звёзды подрастут, и навык подтянется.</div>';
+    }
+  } else {
+    html+='<div class="advice">💡 Пока мало данных — поиграйте 3–4 уровня, и здесь появится статистика по навыкам.</div>';
+  }
+  for(const x of list){
+    html+='<div class="skillRow"><div class="t"><span>'+SKILLS[x.key]+'</span><span>'+
+          (x.pct===null?'—':x.pct+'%')+'</span></div>'+
+          '<div class="sbar'+(x.pct!==null&&x.pct<70?' low':'')+'"><div style="width:'+(x.pct||0)+'%"></div></div>'+
+          '<div class="skNote">верно: '+x.ok+' · ошибок: '+x.miss+'</div></div>';
+  }
+  html+='<div class="advice" style="background:#eef4ff;color:#3b5a92">'+
+        'Игра не требует аккаунта и ничего не отправляет в интернет: весь прогресс хранится в этом браузере. '+
+        'Рекомендуемая длительность занятия — 10–15 минут.</div>'+
+        '<div class="row"><button class="btn small blue" id="btnParentReset">Сбросить прогресс</button></div>';
+  document.getElementById('parentBody').innerHTML=html;
+  const rst=document.getElementById('btnParentReset');
+  if(rst) rst.onclick=()=>{
+    if(confirm('Удалить весь прогресс: звёзды, звания и коллекцию?')){
+      save={levels:{}, sound:save.sound, skills:{}, daily:null, medals:0, seen:{}};
+      persist(); renderMenu(); renderParent(); toast('Прогресс сброшен');
+    }
+  };
 }
 
 /* ============================================================
@@ -1215,7 +1947,7 @@ function showResult(stars, passed){
 document.getElementById('btnPlay').onclick = ()=>{
   audio();
   // первый непройденный уровень
-  let n=1; for(let i=1;i<=100;i++){ if(!(save.levels[i]&&save.levels[i].stars)){ n=i; break; } }
+  let n=1; for(let i=1;i<=LEVELS.length;i++){ if(!(save.levels[i]&&save.levels[i].stars)){ n=i; break; } }
   startLevel(n);
 };
 document.getElementById('btnMap').onclick = ()=>{ renderMap(); showScreen('scrMap'); };
@@ -1226,13 +1958,17 @@ function gotoMenu(){
   renderMenu(); showScreen('scrMenu');
 }
 document.getElementById('btnHome').onclick = gotoMenu;
+document.getElementById('btnHouse').onclick = ()=>{ audio(); renderHouse(); showScreen('scrHouse'); };
+document.getElementById('btnHouseBack').onclick = gotoMenu;
+document.getElementById('btnParent').onclick = ()=>{ renderParent(); showScreen('scrParent'); };
+document.getElementById('btnParentBack').onclick = gotoMenu;
 document.getElementById('btnMenu').onclick = gotoMenu;
 document.getElementById('btnToMap').onclick = ()=>{ renderMap(); showScreen('scrMap'); };
 document.getElementById('btnBack').onclick = ()=>{ renderMap(); showScreen('scrMap'); G.screen='map';
   document.getElementById('hud').classList.add('hidden');
   document.getElementById('prompt').classList.add('hidden'); };
 document.getElementById('btnRetry').onclick = ()=>{ startLevel(G.level.n); };
-document.getElementById('btnNext').onclick = ()=>{ startLevel(Math.min(100,G.level.n+1)); };
+document.getElementById('btnNext').onclick = ()=>{ startLevel(Math.min(LEVELS.length,G.level.n+1)); };
 document.getElementById('btnSound').onclick = ()=>{
   save.sound=!save.sound; persist();
   document.getElementById('btnSound').textContent = save.sound?'🔊':'🔇';
