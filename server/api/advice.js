@@ -1,0 +1,38 @@
+const {createHash}=require('node:crypto');
+const skills=['Внимание и реакция','Буквы и чтение','Счёт','Память','Логика и обобщение','Закономерности','Знания о мире','Мелкая моторика','Чувство ритма'];
+const buckets=new Map(), cache=new Map();
+const num=(v,max)=>Number.isInteger(v)&&v>=0&&v<=max;
+const system='Ты помогаешь родителю ребёнка 5–6 лет выбрать короткое совместное занятие по результатам игры «Лукошко». Пиши по-русски, тепло, естественно, без сюсюканья и канцелярита. Ровно 3–4 предложения, 45–85 слов, один абзац без списков, заголовков, латиницы, эмодзи и процентов. Только сведения из данных; не приписывай ребёнку эмоции, черты характера, причины ошибок, диагнозы или возрастные нормы. Обращайся к родителю, а не к ребёнку: не пиши «вы справляетесь» о детском результате. Не говори, что лично наблюдал ребёнка. Переданные номера уровней — только рекомендации для следующего занятия, а не сведения о пройденных уровнях. Сначала конкретно отметь, что получается, затем осторожно назови навык для практики и предложи одно понятное упражнение дома на пять минут. Укажи один из переданных уровней, если они есть. Если данных мало, не делай выводов о навыках, предложи знакомство с игрой. Не называй навыки сформированными: это только игровые результаты.';
+module.exports=async(req,res)=>{
+ const origin=req.headers.origin;
+ const allowed=(process.env.ALLOWED_ORIGINS||'https://valentinsmolyakoff-cmyk.github.io').split(',');
+ res.setHeader('Cache-Control','no-store');res.setHeader('Vary','Origin');
+ const send=(code,obj)=>res.status(code).json(obj);
+ if(!allowed.includes(origin))return send(403,{error:'origin'});
+ res.setHeader('Access-Control-Allow-Origin',origin);
+ res.setHeader('Access-Control-Allow-Methods','POST, OPTIONS');res.setHeader('Access-Control-Allow-Headers','Content-Type');
+ if(req.method==='OPTIONS')return res.status(204).end();
+ if(req.method!=='POST')return send(405,{error:'method'});
+ if(!String(req.headers['content-type']||'').startsWith('application/json'))return send(415,{error:'content_type'});
+ let body=req.body;try{if(typeof body==='string')body=JSON.parse(body)}catch{return send(400,{error:'data'})}
+ if(!body||JSON.stringify(body).length>4096||!num(body.played,200)||!num(body.stars,600)||!Array.isArray(body.skills)||body.skills.length>9||!Array.isArray(body.levels)||body.levels.length>3)return send(400,{error:'data'});
+ if(body.skills.some(s=>!s||!skills.includes(s.name)||!num(s.pct,100)||!num(s.tot,10000000))||body.levels.some(n=>!num(n,200)||n===0))return send(400,{error:'data'});
+ if(!process.env.GEMINI_API_KEY)return send(503,{error:'not_configured'});
+ const facts={played:body.played,stars:body.stars,skills:body.skills.map(({name,pct,tot})=>({name,pct,tot})),levels:body.levels};
+ const now=Date.now(),key=createHash('sha256').update(JSON.stringify(facts)).digest('hex');
+ const hit=cache.get(key);if(hit&&now-hit.at<3600000)return send(200,{text:hit.text});
+ // Best-effort per-instance throttle. A distributed edge limit must supplement this in production.
+ const ip=createHash('sha256').update(String(req.headers['x-forwarded-for']||req.socket?.remoteAddress||'unknown').split(',')[0]).digest('hex');
+ for(const [k,v]of buckets)if(now-v.at>3600000)buckets.delete(k);
+ const b=buckets.get(ip)||{at:now,count:0};if(b.count>=6){res.setHeader('Retry-After','3600');return send(429,{error:'rate_limit'})}b.count++;buckets.set(ip,b);
+ const model=process.env.GEMINI_MODEL||'gemini-3.1-flash-lite';
+ if(!/^[a-z0-9.-]+$/.test(model))return send(503,{error:'configuration'});
+ try{
+  const response=await fetch('https://generativelanguage.googleapis.com/v1beta/models/'+model+':generateContent',{method:'POST',headers:{'Content-Type':'application/json','x-goog-api-key':process.env.GEMINI_API_KEY},body:JSON.stringify({systemInstruction:{parts:[{text:system}]},contents:[{parts:[{text:JSON.stringify(facts)}]}],generationConfig:{maxOutputTokens:600,temperature:0.65}}),signal:AbortSignal.timeout(25000)});
+  if(!response.ok)return send(response.status===429?429:502,{error:'provider_unavailable'});
+  const data=await response.json();
+  const text=(data.candidates?.[0]?.content?.parts||[]).filter(p=>!p.thought).map(p=>p.text||'').join('').replace(/\s+/g,' ').trim();
+  if(text.length<60||text.length>1000||/[A-Za-z]{4,}|[*#`]|\d\s*%/.test(text))return send(502,{error:'invalid_response'});
+  if(cache.size>=250)cache.delete(cache.keys().next().value);cache.set(key,{at:now,text});return send(200,{text});
+ }catch{return send(502,{error:'provider_unavailable'})}
+};
