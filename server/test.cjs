@@ -39,6 +39,9 @@ async function call(body,extra={}){
  const parent=await call({...valid,recent:[{n:29,k:'mem',errs:2,sec:42}]},extra);assert.equal(parent.body.scope,'parent');assert.notEqual(sent.systemInstruction.parts[0].text,levelPrompt);const parentPayload=JSON.parse(sent.contents[0].parts[0].text);assert.equal(parentPayload.recent[0].errs,2);assert(!('levels' in parentPayload));
  for(const invalid of [{scope:'other'},{scope:'level',level:{...lv,number:'__proto__'}},{scope:'level',level:{...lv,rounds:[{index:99,errors:0,seconds:1}]}},{recent:[{n:29,k:'injection',errs:0,sec:1}]}])assert.equal((await call({...valid,...invalid},extra)).status,400);
  assert.equal((await call({...valid,skills:[{name:'Память',ok:12,tot:10}]})).status,400);
+ const formatted=await call({...valid,played:3});
+ assert(!/[*#`]/.test(formatted.body.text));
+ console.log('PASS: model markdown is stripped before it reaches the screen');
  console.log('PASS: skills are counts of correct actions and cannot exceed attempts');
  console.log('PASS: isolated parent/level prompts and caches, refresh, attempt identity, server catalog, recent history, validation');
  const duplicate=parent.body.text;global.fetch=async()=>({ok:true,json:async()=>({candidates:[{content:{parts:[{text:duplicate}]}}]})});
