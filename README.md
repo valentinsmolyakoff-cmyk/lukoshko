@@ -86,6 +86,49 @@ export VERCEL_TOKEN=...
 
 ---
 
+---
+
+## 2б. GitHub Pages — самый надёжный бесплатный вариант
+
+В папке уже **готовый git-репозиторий** (ветка `main`, один коммит, 22 файла) и скрипт публикации.
+
+### Способ 1: одна команда (нужен токен)
+```bash
+export GITHUB_TOKEN=ghp_...        # Settings → Developer settings → Personal access tokens
+                                   #   scopes: repo + workflow
+./publish-github.sh мой-логин lukoshko
+```
+Скрипт сам: создаст репозиторий → запушит `main` (токен не сохраняется в `.git/config`,
+передаётся одноразовым заголовком) → включит Pages в режиме «GitHub Actions» →
+напечатает адрес `https://мой-логин.github.io/lukoshko/`.
+
+### Способ 2: без токена, через сайт (≈1 минута)
+1. <https://github.com/new> → имя `lukoshko`, **Public** → Create repository.
+2. На странице репозитория: **Add file → Upload files** → перетащите **всё содержимое папки**
+   `lukoshko` (включая `.github`, `.nojekyll`, `icon-*.png`).
+3. **Settings → Pages → Source: «GitHub Actions»** (не «Deploy from a branch»).
+4. Через 30–90 секунд сайт готов: `https://<логин>.github.io/lukoshko/`.
+   Прогресс сборки — во вкладке **Actions**.
+
+### Способ 3: обычный git
+```bash
+git remote add origin https://github.com/<логин>/lukoshko.git
+git push -u origin main
+# затем Settings → Pages → Source: GitHub Actions
+```
+
+### Почему это работает в подпапке
+GitHub Pages отдаёт сайт по адресу `/<репозиторий>/`, и это проверено специально:
+- service worker получает scope `/lukoshko/` (в `sw.js` используются относительные пути);
+- `manifest.webmanifest` и все иконки берутся по относительным ссылкам — **0 запросов с ошибкой**;
+- офлайн-перезагрузка в подпути работает, звёзды сохраняются;
+- `.nojekyll` отключает обработку Jekyll, чтобы файлы отдавались как есть.
+
+После правок: `git add -A && git commit -m "..." && git push` — сайт обновится сам (workflow в `.github/workflows/pages.yml`).
+Не забудьте поднять версию кеша в `sw.js`, иначе у игравших останется старая версия.
+
+---
+
 ## 3. Установка на телефон и планшет
 
 **Android (Chrome):** открыть ссылку → меню «⋮» → **Установить приложение** (или «Добавить на главный экран»).
@@ -111,7 +154,8 @@ export VERCEL_TOKEN=...
 | `ДИЗАЙН.md` | Дизайн-документ: механики, 100 уровней, прогрессия, идеи |
 | `уровни.csv` | Все 100 уровней таблицей |
 | `lukoshko-site.zip` | Архив сайта для drag-and-drop деплоя |
-| `deploy.sh`, `netlify.toml`, `_headers`, `vercel.json` | Публикация и заголовки |
+| `deploy.sh`, `publish-github.sh`, `netlify.toml`, `_headers`, `vercel.json` | Публикация: GitHub Pages / Netlify / Vercel |
+| `.nojekyll`, `.gitattributes`, `LICENSE` (MIT) | Служебное для GitHub Pages |
 
 Размер всей игры — **около 200 КБ**: грузится за секунду даже на слабом мобильном интернете.
 
