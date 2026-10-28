@@ -138,26 +138,29 @@
   .hItem.locked{opacity:.5;filter:grayscale(1);background:#f4f6fb}
   .hItem.fresh{animation:pop .5s cubic-bezier(.2,1.7,.4,1)}
   /* ---- домик: Тишка и одежда ---- */
-  #tishkaScene{position:relative;width:min(300px,80vw);height:230px;margin:6px auto 4px;
+  #tishkaScene{position:relative;width:min(340px,88vw);height:250px;margin:6px auto 4px;
     border-radius:24px;background:linear-gradient(180deg,#fff6e3,#ffeccb);
     box-shadow:inset 0 -10px 0 rgba(200,160,90,.18)}
-  #tishkaScene .pet{position:absolute;left:50%;top:52%;transform:translate(-50%,-50%);
-    font-size:132px;line-height:1;filter:drop-shadow(0 8px 10px rgba(120,80,40,.22))}
-  #tishkaScene .wear{position:absolute;transform:translate(-50%,-50%);line-height:1;
-    filter:drop-shadow(0 3px 4px rgba(90,70,40,.28));transition:all .25s ease}
-  #tishkaScene .wear.empty{display:none}
+  #tishkaScene .pet{position:absolute;z-index:2;left:50%;top:52%;transform:translate(-50%,-50%);
+    font-size:146px;line-height:1;filter:drop-shadow(0 8px 10px rgba(120,80,40,.22))}
+  #tishkaScene .wear{position:absolute;transform-origin:center;line-height:1;z-index:4;
+    filter:drop-shadow(0 3px 4px rgba(90,70,40,.3));transition:left .22s ease, top .22s ease, font-size .22s ease}
+  #tishkaScene .wear.behind{z-index:1}
+  #tishkaScene .ground{position:absolute;left:0;right:0;bottom:0;height:56px;border-radius:0 0 24px 24px;
+    background:linear-gradient(180deg,rgba(190,225,160,0),rgba(160,205,130,.55))}
   #tishkaName{font-size:13px;font-weight:900;color:#8a6f4d;text-align:center;margin-bottom:6px}
   .hItem.wearable{cursor:pointer}
   .hItem.on{outline:4px solid #ffd93d;background:#fffdf0}
   .hItem .slot{font-size:10px;color:#a08dbb;font-weight:800}
   #wearBar{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin:6px 0 2px}
   #wearBar .btn{font-size:14px;padding:8px 16px}
-  /* ---- ИИ-советы ---- */
-  .aiRow{display:flex;align-items:center;gap:10px;margin:6px 0}
-  .aiRow label{width:96px;font-size:13px;font-weight:900;color:#5a6f96;flex:0 0 auto}
-  .aiRow input,.aiRow select{flex:1;min-width:0;padding:9px 12px;border-radius:12px;border:2px solid #d7e3f7;
-    font-family:inherit;font-size:14px;background:#fff;color:#33415c}
-  #aiOut{white-space:pre-wrap;line-height:1.45}
+  /* ---- карточка совета ---- */
+  .aiCard{margin-top:16px;padding:16px 16px 12px;border-radius:20px;background:linear-gradient(160deg,#fff7d9,#ffe9f3);
+    border:3px solid #ffd93d;text-align:left}
+  .aiTitle{font-weight:900;color:#a8621b;font-size:16px;margin-bottom:6px}
+  .aiText{color:#5a4a33;font-size:15px;line-height:1.5;font-weight:700;white-space:pre-wrap;min-height:44px}
+  .aiFoot{display:flex;align-items:center;gap:10px;margin-top:10px;flex-wrap:wrap}
+  .aiNote{font-size:12px;color:#a08d70;font-weight:800}
   #resAi{display:none;margin-top:10px;padding:12px 14px;border-radius:16px;background:#f3f7ff;
     color:#33415c;font-size:14px;font-weight:700;line-height:1.45;white-space:pre-wrap;text-align:left}
   /* интро уровня */
@@ -279,15 +282,11 @@
       <h2>Домик Тишки</h2>
       <div class="pill" style="background:#fff3c4" id="houseStars">⭐ 0</div>
     </div>
-    <div id="tishkaName">🦔 Тишка — нажми на вещь, чтобы надеть её</div>
+    <div id="tishkaName">🦔 Наряди Тишку: нажми на вещь — и она сразу на нём!</div>
     <div id="tishkaScene">
+      <div class="ground"></div>
       <div class="pet">🦔</div>
-      <span class="wear empty" data-slot="back"></span>
-      <span class="wear empty" data-slot="head"></span>
-      <span class="wear empty" data-slot="eyes"></span>
-      <span class="wear empty" data-slot="neck"></span>
-      <span class="wear empty" data-slot="hand"></span>
-      <span class="wear empty" data-slot="feet"></span>
+      <div id="wearLayer"></div>
     </div>
     <div id="wearBar">
       <button class="btn small blue" id="btnWearOff">Снять всё</button>
@@ -306,36 +305,14 @@
       <h2 style="text-align:center">Для родителей</h2>
       <div class="pill" style="background:#e8ffe8" id="parentMedals">🍯 0</div>
     </div>
+      <div id="aiBox" class="aiCard">
+        <div class="aiTitle">🦔 Тишка советует</div>
+        <div id="aiOut" class="aiText">Загляну-ка в твои звёздочки…</div>
+        <div class="aiFoot">
+          <button class="btn small" id="btnAiRefresh">Ещё совет 🎲</button>
+          <span id="aiNote" class="aiNote"></span>
+        </div>
     <div id="parentBody"></div>
-      <div id="aiBox" style="margin-top:16px;padding:14px;border-radius:18px;background:#f3f7ff;text-align:left">
-        <div style="font-weight:900;color:#3b5a92;font-size:16px">🤖 Умные рекомендации (ИИ)</div>
-        <p class="sub" style="text-align:left;margin:6px 0 10px">
-          Игра может попросить ИИ разобрать итоги раундов и подсказать, что тренировать дальше.
-          Ключ хранится <b>только в этом браузере</b> и отправляется напрямую выбранному сервису —
-          на сайт игры и в репозиторий он не попадает. Без ключа советы даёт встроенная логика игры.
-        </p>
-        <div class="aiRow">
-          <label>Сервис</label>
-          <select id="aiProvider">
-            <option value="openrouter">OpenRouter (рекомендуется)</option>
-            <option value="openai">OpenAI</option>
-            <option value="deepseek">DeepSeek</option>
-            <option value="custom">Свой адрес (OpenAI-совместимый)</option>
-          </select>
-        </div>
-        <div class="aiRow"><label>Модель</label><input id="aiModel" placeholder="например, openai/gpt-4o-mini"></div>
-        <div class="aiRow" id="aiBaseRow" style="display:none"><label>Адрес API</label><input id="aiBase" placeholder="https://.../v1"></div>
-        <div class="aiRow"><label>Ключ</label><input id="aiKey" type="password" placeholder="sk-..." autocomplete="off"></div>
-        <div class="sub" style="text-align:left;margin:2px 0 0">
-          Ключ можно получить в личном кабинете сервиса, например
-          <a href="https://openrouter.ai/keys" target="_blank" rel="noopener">openrouter.ai/keys</a> (есть бесплатные модели).
-        </div>
-        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px">
-          <button class="btn small blue" id="btnAiSave">Сохранить настройки</button>
-          <button class="btn small" id="btnAiAdvice">Получить совет ✨</button>
-          <button class="btn small pink" id="btnAiForget">Удалить ключ</button>
-        </div>
-        <div id="aiOut" class="advice" style="margin-top:12px;display:none"></div>
       </div>
   </div>
 </div>
@@ -1124,25 +1101,44 @@ const COLLECTION = [
   {s:544,e:'👑', n:'Корона'},         {s:564,e:'🌈', n:'Радуга'},
   {s:584,e:'🏆', n:'Кубок'},          {s:600,e:'💎', n:'Алмаз'},
 ];
-/* ---- что можно надеть: слот и место на сцене ---- */
-const WEAR_SLOT = {
-  '🎩':'head','👑':'head','🕶️':'eyes','🧣':'neck','🧤':'paws','👟':'feet','🎒':'back',
-  '🔦':'hand','🥕':'hand','🍯':'hand','🎈':'hand','🪁':'hand','🎨':'hand','🎸':'hand',
-  '🥁':'hand','🔭':'hand','🧭':'hand','🗺️':'hand','🌟':'hand','🏆':'hand','💎':'hand',
-};
-const SLOT_LOOK = {
-  head: {left:50, top:15, size:60, rot:0},
-  eyes: {left:44, top:38, size:42, rot:0},
-  neck: {left:47, top:62, size:44, rot:0},
-  paws: {left:74, top:52, size:42, rot:-8},
-  feet: {left:50, top:82, size:38, rot:0},
-  back: {left:24, top:44, size:50, rot:-6},
-  hand: {left:78, top:58, size:44, rot:6},
-};
-const SLOT_NAME = {head:'на голову', eyes:'на глазки', neck:'на шею', paws:'на лапки',
-                   feet:'на ножки', back:'за спину', hand:'в лапку'};
+/* ---- что можно надеть: слот и точное место на сцене ---- */
+/* x,y — проценты от сцены, s — размер шрифта, r — поворот, z — слой.
+   Координаты подобраны под мордочку ёжика (смотрит влево): шапка на макушку,
+   очки на глазки, шарф под мордочку, вещи — в лапку справа, а не «в попу». */
+const ITEM_LOOK = {
+  /* шапки — на макушку (между ушками и иголками) */
+  '🎩': {slot:'head',  x:34, y:29, s:62, r:-10, z:6},
+  '👑': {slot:'head',  x:33, y:30, s:54, r:-12, z:6},
+  /* очки — на глазки */
+  '🕶️':{slot:'eyes',  x:31, y:47, s:42, r:6,   z:6},
+  /* шарф — под мордочкой */
+  '🧣': {slot:'neck',  x:28, y:69, s:40, r:-14, z:6},
+  /* перчатки — на передние лапки */
+  '🧤': {slot:'paws',  x:34, y:78, s:34, r:-18, z:6},
+  /* ботинки — на ножки */
+  '👟': {slot:'feet',  x:50, y:84, s:34, r:4,   z:6},
+  /* рюкзак — за спинкой */
+  '🎒': {slot:'back',  x:66, y:48, s:50, r:12,  z:1, behind:true},
+  /* предметы — в передние лапки, перед грудкой, а не «в попу» */
+  '🔦': {slot:'hand',  x:44, y:84, s:36, r:-24, z:6},
+  '🥕': {slot:'hand',  x:40, y:86, s:34, r:-32, z:6},
+  '🍯': {slot:'hand',  x:42, y:85, s:34, r:0,   z:6},
+  '🎨': {slot:'hand',  x:40, y:86, s:36, r:-8,  z:6},
+  '🥁': {slot:'hand',  x:40, y:84, s:40, r:0,   z:6},
+  '🎸': {slot:'hand',  x:31, y:82, s:44, r:-38, z:6},
+  '🔭': {slot:'hand',  x:29, y:76, s:40, r:44,  z:6},
+  '🧭': {slot:'hand',  x:42, y:86, s:32, r:0,   z:6},
+  '🗺️':{slot:'hand',  x:38, y:84, s:36, r:-10, z:6},
+  '🏆': {slot:'hand',  x:42, y:82, s:40, r:0,   z:6},
+  '💎': {slot:'hand',  x:42, y:84, s:36, r:0,   z:6},
+  /* летающие игрушки — выше лапки, чтобы не сливались с иголками */
+  '🎈': {slot:'hand',  x:26, y:26, s:44, r:0,   z:3},
+  '🪁': {slot:'hand',  x:20, y:22, s:46, r:14,  z:3},
+  '🌟': {slot:'hand',  x:28, y:20, s:42, r:0,   z:3},
+};const SLOT_NAME = {head:'на макушку', eyes:'на глазки', neck:'на шею', paws:'на лапки',
+                   feet:'на ножки', back:'за спинку', hand:'в лапку'};
 function outfit(){ if(!save.outfit) save.outfit = {}; return save.outfit; }
-function slotOf(e){ return WEAR_SLOT[e] || null; }
+function slotOf(e){ const l=ITEM_LOOK[e]; return l? l.slot : null; }
 function wearItem(item){
   const slot = slotOf(item.e);
   if(!slot) return false;
@@ -1152,21 +1148,23 @@ function wearItem(item){
   return true;
 }
 function renderTishka(){
+  const layer = document.getElementById('wearLayer');
+  if(!layer) return;
   const o = outfit();
-  document.querySelectorAll('#tishkaScene .wear').forEach(el=>{
-    const slot = el.dataset.slot;
+  let html='';
+  for(const slot in o){
     const e = o[slot];
-    if(e){
-      const look = SLOT_LOOK[slot] || SLOT_LOOK.hand;
-      el.textContent = e;
-      el.classList.remove('empty');
-      el.style.left = look.left+'%'; el.style.top = look.top+'%';
-      el.style.fontSize = look.size+'px';
-      el.style.transform = 'translate(-50%,-50%) rotate('+look.rot+'deg)';
-    } else {
-      el.textContent=''; el.classList.add('empty');
-    }
-  });
+    if(!e) continue;
+    const look = Object.assign({}, ITEM_LOOK[e] || {x:74,y:70,s:40,r:0,z:4});
+    // чтобы вещи не наезжали друг на друга в полном образе
+    if(slot==='feet' && o.hand){ look.x = 32; look.y = 86; look.s = 30; }
+    if(slot==='hand' && o.feet && look.y > 60){ look.y -= 5; look.x += 3; }
+    if(slot==='neck' && o.hand && look.y > 60){ look.y = 64; }
+    html += '<span class="wear'+(look.behind?' behind':'')+'" style="left:'+look.x+'%;top:'+look.y+'%;'+
+            'font-size:'+look.s+'px;z-index:'+(look.z||4)+';'+
+            'transform:translate(-50%,-50%) rotate('+(look.r||0)+'deg)">'+e+'</span>';
+  }
+  layer.innerHTML = html;
 }
 function collectionIndex(stars){ let n=0; for(const it of COLLECTION) if(stars>=it.s) n++; return n; }
 function nextCollection(stars){ for(const it of COLLECTION) if(stars<it.s) return it; return null; }
@@ -1805,14 +1803,13 @@ function drawCatcher(){
   // ёжик сверху
   ctx.font='62px '+EMOJI_FONT; ctx.textAlign='center'; ctx.textBaseline='middle';
   ctx.fillText('🦔',0,-22);
-  // надетые вещи видны и в игре
+  // надетые вещи видны и в игре (обувь прячет корзинка, поэтому её не рисуем)
   const o = (save && save.outfit) || {};
-  ctx.font='34px '+EMOJI_FONT;
-  if(o.head) ctx.fillText(o.head, 2, -56);
-  if(o.eyes) ctx.fillText(o.eyes, 0, -22);
-  if(o.neck) ctx.fillText(o.neck, 0, 14);
-  if(o.hand){ ctx.font='26px '+EMOJI_FONT; ctx.fillText(o.hand, 44, -30); }
-  if(o.back){ ctx.font='26px '+EMOJI_FONT; ctx.fillText(o.back, -42, -34); }
+  if(o.back){ ctx.font='30px '+EMOJI_FONT; ctx.fillText(o.back, -40, -30); }
+  if(o.head){ ctx.font='34px '+EMOJI_FONT; ctx.fillText(o.head, 2, -58); }
+  if(o.eyes){ ctx.font='36px '+EMOJI_FONT; ctx.fillText(o.eyes, 0, -22); }
+  if(o.neck){ ctx.font='30px '+EMOJI_FONT; ctx.fillText(o.neck, -2, 12); }
+  if(o.hand){ ctx.font='26px '+EMOJI_FONT; ctx.fillText(o.hand, 46, -26); }
   ctx.restore();
 }
 
@@ -2432,8 +2429,8 @@ function renderHouse(){
   document.getElementById('houseStars').textContent='⭐ '+st;
   const idx=collectionIndex(st);
   document.getElementById('houseSub').textContent =
-    'Открыто предметов: '+idx+' из '+COLLECTION.length+
-    '. За каждые новые звёзды Тишка получает вещь в домик.';
+    'У Тишки уже '+idx+' '+plural(idx,'вещь','вещи','вещей')+' из '+COLLECTION.length+
+    '. За каждую новую звёздочку в лукошке появляется что-то новенькое!';
   const g=document.getElementById('houseGrid');
   const o=outfit();
   g.innerHTML='';
@@ -2475,9 +2472,9 @@ function renderParent(){
   const perfect=Object.keys(save.levels).filter(k=>(save.levels[k].stars||0)===3).length;
   let html='';
   html+='<p class="sub" style="text-align:left">'+
-        'Пройдено уровней: <b>'+played+'</b> из '+LEVELS.length+' · собрано звёзд: <b>'+st+'</b> из '+MAX_STARS+
-        ' · уровней на 3 звезды: <b>'+perfect+'</b><br>'+
-        'Звание: <b>'+rk.e+' '+rk.n+'</b>'+(nx? ' · до «'+nx.n+'» — '+(nx.s-st)+' ⭐':'')+
+        'Пройдено <b>'+played+'</b> '+plural(played,'уровень','уровня','уровней')+' из '+LEVELS.length+
+        ', звёзд <b>'+st+'</b>, из них на три звезды — <b>'+perfect+'</b>.<br>'+
+        'Звание: <b>'+rk.e+' '+rk.n+'</b>'+(nx? ' · до «'+nx.n+'» осталось '+(nx.s-st)+' ⭐':'')+
         ' · медалей за задания дня: <b>'+(save.medals||0)+'</b></p>';
 
   const list=[];
@@ -2493,23 +2490,24 @@ function renderParent(){
     const lvls=LEVELS.filter(l=>l.r.some(r=>r.k===kind) && ((save.levels[l.n]||{}).stars||0)<3)
                      .slice(0,3).map(l=>l.n);
     if(lvls.length){
-      html+='<div class="advice">💡 Слабое место: '+SKILLS[weak.key].toLowerCase()+
-            ' ('+weak.pct+'% верных). Попробуйте уровни: '+
-            lvls.map(n=>'<b>'+n+'</b>').join(', ')+' — и звёзды подрастут, и навык подтянется.</div>';
+      html+='<div class="advice">🌱 Больше всего звёздочек принесёт «'+SKILLS[weak.key].toLowerCase()+
+            '» — сейчас верных попыток '+weak.pct+'%. Загляните на уровни '+
+            lvls.map(n=>'<b>'+n+'</b>').join(', ')+': там это тренируется веселее всего.</div>';
     }
   } else {
-    html+='<div class="advice">💡 Пока мало данных — поиграйте 3–4 уровня, и здесь появится статистика по навыкам.</div>';
+    html+='<div class="advice">🌱 Тишка ещё приглядывается: сыграйте 3–4 уровня, и здесь появится '+
+          'понятная картина, что даётся легко, а что стоит потренировать.</div>';
   }
   for(const x of list){
     html+='<div class="skillRow"><div class="t"><span>'+SKILLS[x.key]+'</span><span>'+
           (x.pct===null?'—':x.pct+'%')+'</span></div>'+
           '<div class="sbar'+(x.pct!==null&&x.pct<70?' low':'')+'"><div style="width:'+(x.pct||0)+'%"></div></div>'+
-          '<div class="skNote">верно: '+x.ok+' · ошибок: '+x.miss+'</div></div>';
+          '<div class="skNote">попаданий '+x.ok+' · промахов '+x.miss+'</div></div>';
   }
   html+='<div class="advice" style="background:#eef4ff;color:#3b5a92">'+
-        'Игра не требует аккаунта и ничего не отправляет в интернет: весь прогресс хранится в этом браузере. '+
-        'Рекомендуемая длительность занятия — 10–15 минут.</div>'+
-        '<div class="row"><button class="btn small blue" id="btnParentReset">Сбросить прогресс</button></div>';
+        '🕐 Тишка советует играть по 10–15 минут — как раз один-два мира. '+
+        'Потом лучше побегать и попить воды: так звёздочки запоминаются крепче.</div>'+
+        '<div class="row"><button class="btn small blue" id="btnParentReset">Начать всё заново</button></div>';
   document.getElementById('parentBody').innerHTML=html;
   const rst=document.getElementById('btnParentReset');
   if(rst) rst.onclick=()=>{
@@ -2521,18 +2519,17 @@ function renderParent(){
 }
 
 /* ============================================================
-   14в. ИИ-СОВЕТЫ
+   14в. ТИШКА СОВЕТУЕТ (ИИ без настроек)
    ============================================================ */
-const AI_KEY = 'lukoshko_ai_v1';
-const AI_PROVIDERS = {
-  openrouter: {base:'https://openrouter.ai/api/v1', model:'openai/gpt-4o-mini'},
-  openai:     {base:'https://api.openai.com/v1',    model:'gpt-4o-mini'},
-  deepseek:   {base:'https://api.deepseek.com/v1',  model:'deepseek-chat'},
-  custom:     {base:'',                             model:''},
-};
+/* Советы генерирует бесплатный сервис pollinations.ai.
+   Настройки не нужны: ключей в игре нет, родителю ничего вводить не надо.
+   Если сервис недоступен — работает встроенная весёлая логика. */
+const AI_ENDPOINT = 'https://text.pollinations.ai/';
 const KIND_LABEL = {catch:'ловля предметов', sort:'сортировка', mem:'память', seq:'узоры',
   odd:'что лишнее', diff:'найди отличие', dots:'соедини точки', maze:'лабиринт',
   rhythm:'чувство ритма', word:'сборка слова', choice:'вопросы'};
+let aiBusy=false;
+
 function plural(n,a,b,c){
   const m=n%100, k=n%10;
   if(m>=11&&m<=14) return c;
@@ -2540,134 +2537,148 @@ function plural(n,a,b,c){
   if(k>=2&&k<=4) return b;
   return c;
 }
-function aiConfig(){
-  try{ return JSON.parse(localStorage.getItem(AI_KEY)||'{}'); }catch(e){ return {}; }
-}
-function aiSaveCfg(cfg){ try{ localStorage.setItem(AI_KEY, JSON.stringify(cfg)); }catch(e){} }
-function aiFillForm(){
-  const c=aiConfig();
-  const prov=document.getElementById('aiProvider');
-  if(!prov) return;
-  prov.value = c.provider || 'openrouter';
-  document.getElementById('aiModel').value = c.model || '';
-  document.getElementById('aiBase').value = c.base || '';
-  document.getElementById('aiKey').value = c.key || '';
-  document.getElementById('aiBaseRow').style.display = (c.provider==='custom')?'flex':'none';
-  const out=document.getElementById('aiOut');
-  if(save.aiAdvice && save.aiAdvice.text){
-    out.style.display='block';
-    out.textContent = save.aiAdvice.text + '\n\n(' + save.aiAdvice.when + ')';
-  }
-}
-async function aiAsk(prompt, maxTokens){
-  const c = aiConfig();
-  if(!c.key) throw new Error('Ключ не задан. Введите ключ и нажмите «Сохранить настройки».');
-  const preset = AI_PROVIDERS[c.provider] || AI_PROVIDERS.openrouter;
-  const base = (c.base || preset.base || '').replace(/\/+$/,'');
-  const model = c.model || preset.model;
-  if(!base) throw new Error('Не указан адрес API.');
-  if(!model) throw new Error('Не указана модель.');
-  const sys = 'Ты — методист-педагог и помогаешь родителю ребёнка 5-6 лет, который играет в развивающую игру '+
-    '«Лукошко» (ловля предметов, сортировка, память, узоры, буквы, счёт, лабиринты, ритм). '+
-    'Отвечай по-русски, тепло и коротко: 3-5 предложений, без списков, заголовков и markdown, без вступлений. '+
-    'Дай одно-два конкретных упражнения из игры или из быта. Не ставь диагнозов и не пугай.';
-  let r=null;
-  try{
-    r = await fetch(base + '/chat/completions', {
-      method:'POST',
-      headers:{'Content-Type':'application/json','Authorization':'Bearer '+c.key},
-      body: JSON.stringify({model, temperature:0.6, max_tokens: maxTokens||380,
-        messages:[{role:'system',content:sys},{role:'user',content:prompt}]})
-    });
-  }catch(err){
-    throw new Error('Не удалось связаться с сервисом. Проверьте интернет, адрес API и ключ. '+
-      'Если ключ неверный, сервис часто не разрешает ответ браузеру — попробуйте OpenRouter '+
-      'или другой сервис с поддержкой ключа в браузере.');
-  }
-  if(!r.ok){
-    let t=''; try{ t=await r.text(); }catch(e){}
-    throw new Error('Сервис ответил ошибкой '+r.status+'. '+t.slice(0,160));
-  }
-  const j = await r.json();
-  const ch = (j.choices||[])[0]||{};
-  const txt = (ch.message && ch.message.content) || '';
-  if(!txt) throw new Error('Пустой ответ от ИИ.');
-  return String(txt).trim();
-}
-function kidProfileText(){
-  const st=totalStars(), rk=rankFor(st), played=Object.keys(save.levels).length;
+
+/* ---- профиль ребёнка простыми словами ---- */
+function kidFacts(){
+  const st=totalStars(), played=Object.keys(save.levels).length;
   const sk = Object.keys(SKILLS).map(k=>{
     const o=save.skills[k]||{ok:0,miss:0}, tot=o.ok+o.miss;
-    return tot? (SKILLS[k]+': '+Math.round(100*o.ok/tot)+'% ('+tot+' действий)') : null;
-  }).filter(Boolean).join('; ');
-  const recent=(save.roundLog||[]).slice(-12).map(r=>
-    'ур.'+r.n+' '+KIND_LABEL[r.k]+' — ошибок '+r.errs+', '+Math.round(r.sec)+' c').join('; ');
-  return 'Звёзд: '+st+' из '+MAX_STARS+', пройдено уровней: '+played+' из '+LEVELS.length+
-         ', звание: '+rk.n+'. Навыки: '+(sk||'пока нет данных')+
-         '. Последние задания: '+(recent||'нет')+'.';
+    return tot? {name:SKILLS[k], pct:Math.round(100*o.ok/tot), tot} : null;
+  }).filter(Boolean).sort((x,y)=>x.pct-y.pct);
+  const recent=(save.roundLog||[]).slice(-6).map(r=>
+    'уровень '+r.n+', '+KIND_LABEL[r.k]+', ошибок '+r.errs);
+  return {st, played, sk, recent, rank:rankFor(st).n};
 }
-async function aiAdviceForParent(){
-  const out=document.getElementById('aiOut');
-  out.style.display='block'; out.textContent='🤖 Думаю…';
-  try{
-    const txt = await aiAsk(kidProfileText() + ' Дай рекомендацию родителю: что подтянуть и как это делать в игре и в быту.', 420);
-    save.aiAdvice = {text:txt, when:'совет от '+new Date().toLocaleString('ru-RU')};
-    persist();
-    out.textContent = txt + '\n\n(' + save.aiAdvice.when + ')';
-  }catch(e){
-    out.textContent = '⚠️ ' + e.message +
-      '\n\nПока ИИ недоступен, работают встроенные рекомендации выше — им интернет не нужен.';
+
+function aiPromptFacts(){
+  const f=kidFacts();
+  return 'Ребёнок 5-6 лет играет в развивающую игру «Лукошко». '+
+    'Собрано звёзд: '+f.st+', пройдено уровней: '+f.played+', звание: «'+f.rank+'». '+
+    (f.sk.length? 'Процент верных действий по навыкам: '+f.sk.map(x=>x.name+' '+x.pct+'%').join(', ')+'. ' : 'Статистики пока мало. ')+
+    (f.recent.length? 'Последние задания: '+f.recent.join('; ')+'. ' : '');
+}
+
+/* ---- встроенный совет, если ИИ недоступен ---- */
+function localAdvice(){
+  const f=kidFacts();
+  const weak=f.sk[0];
+  const kindOf={ 'Внимание и реакция':'catch', 'Буквы и чтение':'word', 'Счёт':'dots',
+    'Память':'mem', 'Логика и обобщение':'sort', 'Закономерности':'seq',
+    'Знания о мире':'choice', 'Мелкая моторика':'maze', 'Чувство ритма':'rhythm' };
+  const tips={
+    catch:'поиграйте в «поймай только яблоки»: раскладывайте яблоки и груши по разным мискам',
+    word:'собирайте слова из магнитов на холодильнике — по одной букве, с хлопком в ладоши',
+    dots:'считайте ступеньки и ложки вслух, дотрагиваясь до каждой',
+    mem:'поиграйте в «что спряталось»: уберите один предмет со стола и спросите, кто пропал',
+    sort:'разложите носки и футболки по двум кучкам и назовите признак вслух',
+    seq:'выложите узор из пуговиц: большая-маленькая-большая, и попросите продолжить',
+    choice:'задавайте вопросы «а что будет, если…» по дороге в садик',
+    maze:'рисуйте дорожки по клеточкам и ведите пальчиком от старта к домику',
+    rhythm:'хлопайте в ладоши под музыку — громко-тихо, быстро-медленно'
+  };
+  if(!weak || weak.tot<8){
+    return 'Тишка только знакомится с твоими звёздочками! 🦔 Поиграй ещё пару уровней — и Тишка расскажет, '+
+           'что получается лучше всего и что стоит потренировать.';
   }
+  const kind=kindOf[weak.name]||'catch';
+  const lvls=LEVELS.filter(l=>l.r.some(r=>r.k===kind) && ((save.levels[l.n]||{}).stars||0)<3).slice(0,2).map(l=>l.n);
+  const best=f.sk[f.sk.length-1];
+  let out='Звёзд в лукошке уже '+f.st+' — это здорово! 🦔 ';
+  if(best && best.pct>=75) out+='Лучше всего получается «'+best.name.toLowerCase()+'» — '+best.pct+'% верных действий. ';
+  out+='Хочется подтянуть «'+weak.name.toLowerCase()+'» ('+weak.pct+'%): '+tips[kind]+'. ';
+  if(lvls.length) out+='В игре для этого отлично подойдут уровни '+lvls.join(' и ')+'. ';
+  out+='А завтра — ещё немножко звёзд и хорошее настроение!';
+  return out;
 }
+
+/* ---- запрос к ИИ (без ключей и настроек) ---- */
+function aiUrl(prompt){
+  const q = encodeURIComponent(prompt.slice(0, 1400));
+  const sys = encodeURIComponent(
+    'Ты — весёлый ёжик Тишка, друг малыша 5 лет. Пишешь короткую записку родителю. '+
+    'Правила: по-русски, простыми бытовыми словами, как говорят с мамой на кухне. '+
+    'Ровно 3 предложения. Без списков, без заголовков, без markdown, без процентов и терминов, '+
+    'без выдуманных слов. Первое — что уже получается. Второе — что потренировать завтра. '+
+    'Третье — одно весёлое упражнение дома или в игре. Можно одну тёплую шутку. Не ставь диагнозов.');
+  return AI_ENDPOINT + q + '?model=openai-fast&system=' + sys;
+}
+async function aiFetchAdvice(prompt, ms){
+  const ctrl = new AbortController();
+  const timer = setTimeout(()=>ctrl.abort(), ms||22000);
+  try{
+    const r = await fetch(aiUrl(prompt), {signal:ctrl.signal});
+    if(!r.ok) throw new Error('ответ '+r.status);
+    let t = await r.text();
+    t = String(t||'').trim().replace(/^["«\s]+|["»\s]+$/g,'');
+    if(t.length < 25) throw new Error('пустой ответ');
+    return t;
+  } finally { clearTimeout(timer); }
+}
+
+/* ---- совет в родительском уголке: сам появляется при входе ---- */
+async function loadParentAdvice(force){
+  const out=document.getElementById('aiOut');
+  const note=document.getElementById('aiNote');
+  if(!out || aiBusy) return;
+  const cached = save.aiAdvice;
+  const playedNow=(save.roundLog||[]).length;
+  const fresh = cached && (playedNow - (cached.rounds||0) < 3);
+  if(!force && cached && cached.text && fresh){
+    out.textContent = cached.text;
+    note.textContent = cached.when || '';
+    return;
+  }
+  aiBusy=true;
+  const spin=['Тишка нюхает звёздочки…','Тишка листает лукошко…','Тишка думает, шевеля иголками…'];
+  out.textContent = spin[Math.floor(Math.random()*spin.length)];
+  note.textContent = '';
+  try{
+    const prompt = aiPromptFacts() +
+      'Напиши родителю короткий совет: что у малыша уже получается, что потренировать завтра и как это сделать дома.';
+    const txt = await aiFetchAdvice(prompt);
+    save.aiAdvice = {text:txt, rounds:(save.roundLog||[]).length,
+      when:'Тишка придумал совет в '+new Date().toLocaleTimeString('ru-RU',{hour:'2-digit',minute:'2-digit'})};
+    persist();
+    out.textContent = txt;
+    note.textContent = save.aiAdvice.when;
+  }catch(e){
+    out.textContent = localAdvice();
+    note.textContent = '🦔 Тишка придумал совет сам, без интернета';
+  }
+  aiBusy=false;
+}
+
+/* ---- совет на экране результата ---- */
 async function aiAdviceForLevel(){
   const btn=document.getElementById('btnAiLevel');
   const box=document.getElementById('resAi');
-  box.style.display='block'; box.textContent='🤖 Думаю…'; btn.disabled=true;
+  if(!box || aiBusy) return;
   const lv=G.level;
-  let logs=(G.roundLog||[]).slice();
-  if(!logs.length && lv && lv.r) logs = lv.r.map(r=>({k:r.k, errs:0, sec:0}));
-  const secs = Math.round((performance.now()-G.levelT0)/1000);
-  const rs=logs.map(r=>KIND_LABEL[r.k]+': ошибок '+r.errs+', '+Math.round(r.sec)+' c').join('; ');
-  const stars = G.errs<=1?3:G.errs<=4?2:1;
+  if(!lv) return;
+  aiBusy=true;
+  box.style.display='block'; btn.disabled=true;
+  const spin=['Тишка нюхает твой результат…','Тишка шевелит иголками…','Тишка считает звёздочки…'];
+  box.textContent = spin[Math.floor(Math.random()*spin.length)];
+  const secs=Math.round((performance.now()-G.levelT0)/1000);
+  const stars=G.errs<=1?3:G.errs<=4?2:1;
   try{
-    const p='Ребёнок прошёл уровень '+lv.n+' «'+lv.t+'» (мир: '+((WORLDS[lv.w]||{}).name)+') за '+
-      secs+' '+plural(secs,'секунду','секунды','секунд')+', ошибок '+G.errs+', звёзд '+stars+'. '+
-      'Задания — '+(rs||'—')+'. ' + kidProfileText() +
-      ' Коротко: что ребёнок уже умеет и что потренировать завтра.';
-    box.textContent = await aiAsk(p, 380);
+    const prompt='Малыш только что прошёл уровень «'+lv.t+'» (мир «'+((WORLDS[lv.w]||{}).name)+'») за '+
+      secs+' '+plural(secs,'секунду','секунды','секунд')+', ошибок '+G.errs+', заработал '+stars+' '+
+      plural(stars,'звезду','звезды','звёзд')+'. ' + aiPromptFacts() +
+      ' Напиши ребёнку и родителю 3-4 предложения: что сегодня получилось и что попробовать завтра.';
+    box.textContent = await aiFetchAdvice(prompt);
   }catch(e){
-    const hint=(document.getElementById('resHint')||{}).textContent||'';
-    box.textContent='⚠️ '+e.message+'\n\nВстроенный совет: '+hint;
+    box.textContent = localAdvice();
   }
   btn.disabled=false;
+  aiBusy=false;
 }
+
 function bindAiUI(){
-  const prov=document.getElementById('aiProvider');
-  if(!prov) return;
-  prov.onchange = ()=>{
-    document.getElementById('aiBaseRow').style.display = (prov.value==='custom')?'flex':'none';
-    const d=AI_PROVIDERS[prov.value]||{};
-    const m=document.getElementById('aiModel');
-    if(d.model && !m.value) m.value=d.model;
-  };
-  document.getElementById('btnAiSave').onclick = ()=>{
-    const cfg={provider:prov.value,
-      model:document.getElementById('aiModel').value.trim(),
-      base:document.getElementById('aiBase').value.trim(),
-      key:document.getElementById('aiKey').value.trim()};
-    if(cfg.provider==='custom' && !cfg.base){ toast('Укажите адрес API'); return; }
-    aiSaveCfg(cfg);
-    toast(cfg.key? 'Настройки ИИ сохранены 🔑' : 'Сохранено без ключа — будут встроенные советы');
-  };
-  document.getElementById('btnAiForget').onclick = ()=>{
-    aiSaveCfg({}); save.aiAdvice=null; persist();
-    document.getElementById('aiOut').style.display='none';
-    document.getElementById('aiKey').value='';
-    toast('Ключ удалён из браузера');
-  };
-  document.getElementById('btnAiAdvice').onclick = ()=>aiAdviceForParent();
-  document.getElementById('btnAiLevel').onclick = ()=>aiAdviceForLevel();
-  aiFillForm();
+  const btn=document.getElementById('btnAiRefresh');
+  if(btn) btn.onclick = ()=>loadParentAdvice(true);
+  const bl=document.getElementById('btnAiLevel');
+  if(bl) bl.onclick = ()=>aiAdviceForLevel();
 }
 
 /* ============================================================
@@ -2689,7 +2700,7 @@ function gotoMenu(){
 document.getElementById('btnHome').onclick = gotoMenu;
 document.getElementById('btnHouse').onclick = ()=>{ audio(); renderHouse(); showScreen('scrHouse'); };
 document.getElementById('btnHouseBack').onclick = gotoMenu;
-document.getElementById('btnParent').onclick = ()=>{ renderParent(); showScreen('scrParent'); aiFillForm(); };
+document.getElementById('btnParent').onclick = ()=>{ renderParent(); showScreen('scrParent'); loadParentAdvice(false); };
 bindAiUI();
 document.getElementById('btnParentBack').onclick = gotoMenu;
 document.getElementById('btnMenu').onclick = gotoMenu;
