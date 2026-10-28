@@ -1,11 +1,10 @@
 /* Лукошко — service worker.
    Задача: игра открывается даже без интернета (планшет в машине, слабый Wi-Fi в саду).
    При обновлении игры поменяйте номер версии в CACHE — старый кеш удалится сам. */
-const CACHE = 'lukoshko-v12';
+const CACHE = 'lukoshko-v13';
 const FILES = [
   './',
   './index.html',
-  './pictures.js',
   './manifest.webmanifest',
   './icon.svg',
   './icon-192.png',
@@ -16,16 +15,24 @@ const FILES = [
 
 self.addEventListener('install', e => {
   e.waitUntil(
-    caches.open(CACHE).then(c => c.addAll(FILES)).then(() => self.skipWaiting())
+    caches.open(CACHE).then(c => c.addAll(FILES.map(url=>new Request(url,{cache:'reload'})))).then(() => self.skipWaiting())
   );
 });
 
 self.addEventListener('activate', e => {
-  e.waitUntil(
-    caches.keys()
-      .then(keys => Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k))))
-      .then(() => self.clients.claim())
-  );
+  e.waitUntil((async()=>{
+    const keys=await caches.keys();
+    await Promise.all(keys.filter(k=>k.startsWith('lukoshko-')&&k!==CACHE).map(k=>caches.delete(k)));
+    await self.clients.claim();
+    const scope=new URL('./',self.location.href).pathname;
+    const windows=await self.clients.matchAll({type:'window',includeUncontrolled:true});
+    await Promise.all(windows.map(async client=>{
+      const u=new URL(client.url);
+      if(u.origin===self.location.origin&&u.pathname.startsWith(scope)&&u.searchParams.get('build')!=='13'){
+        u.searchParams.set('build','13');client.navigate(u.href).catch(()=>{});
+      }
+    }));
+  })());
 });
 
 self.addEventListener('fetch', e => {

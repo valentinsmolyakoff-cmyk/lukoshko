@@ -15,3 +15,5 @@ __pycache__/
 
 # кеш исходников встроенных иллюстраций
 tools/picture-source/
+
+tools/art-bundle.js
