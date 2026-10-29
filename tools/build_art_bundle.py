@@ -48,15 +48,23 @@ pictures={g:png(svg) for g,svg in src['pictures'].items()}
 photo=root/'assets/photo'
 manifest=root/'assets/photo/manifest.json'
 if manifest.exists():
- photo_pictures={}
+ photo_pictures={};photo_glyphs=[]
  for glyph,name in json.loads(manifest.read_text()).items():
   cut=photo/(name+'.png')
   if not cut.exists():raise SystemExit('нет вырезанного предмета: '+name)
-  photo_pictures[glyph]='data:image/png;base64,'+base64.b64encode(cut.read_bytes()).decode()
+  # WebP: те же 256×256 с прозрачностью весят вчетверо меньше PNG, поэтому встроенный
+  # бандл остаётся лёгким для планшета. Поддержка WebP есть во всех современных браузерах.
+  from io import BytesIO
+  from PIL import Image
+  buf=BytesIO();Image.open(cut).convert('RGBA').save(buf,'WEBP',quality=84,method=4)
+  photo_pictures[glyph]='data:image/webp;base64,'+base64.b64encode(buf.getvalue()).decode()
+  photo_glyphs.append(glyph)
  pictures.update(photo_pictures)
  print('photographic items:',len(photo_pictures))
 
-js='/* Embedded PNG art. Twemoji graphics © Twitter, Inc and contributors, CC-BY 4.0; PICTURES-LICENSE.md. */\nconst GAME_PICTURES='+json.dumps(pictures,ensure_ascii=False,separators=(',',':'))+';\nconst TISHKA_LAYERS='+json.dumps(layers,separators=(',',':'))+';\n'
+if not manifest.exists():photo_glyphs=[]
+js='/* Embedded PNG art. Twemoji graphics © Twitter, Inc and contributors, CC-BY 4.0; PICTURES-LICENSE.md. */\nconst GAME_PICTURES='+json.dumps(pictures,ensure_ascii=False,separators=(',',':'))+';\nconst TISHKA_LAYERS='+json.dumps(layers,separators=(',',':'))+';\n'\
+ +'const PHOTO_GLYPHS='+json.dumps(photo_glyphs,ensure_ascii=False,separators=(',',':'))+';\n'
 (root/'tools/art-bundle.js').write_text(js)
 p=root/'index.html';s=p.read_text()
 if '<script id="artBundle">' in s:

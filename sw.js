@@ -1,7 +1,7 @@
 /* Лукошко — service worker.
    Задача: игра открывается даже без интернета (планшет в машине, слабый Wi-Fi в саду).
    При обновлении игры поменяйте номер версии в CACHE — старый кеш удалится сам. */
-const CACHE = 'lukoshko-v23';
+const CACHE = 'lukoshko-v24';
 const FILES = [
   './',
   './index.html',
