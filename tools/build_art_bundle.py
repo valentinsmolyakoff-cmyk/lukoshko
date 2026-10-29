@@ -62,9 +62,24 @@ if manifest.exists():
  pictures.update(photo_pictures)
  print('photographic items:',len(photo_pictures))
 
+# Вещи в «надетом» виде: та же вещь, снятая в нужном ракурсе, надевается на ёжика,
+# а инвентарь продолжает показывать студийное фото предмета.
+worn_path=root/'assets/photo/worn.json'
+wear_pictures={}
+if worn_path.exists():
+ for glyph,name in json.loads(worn_path.read_text(encoding='utf-8')).items():
+  cut=photo/(name+'.png')
+  if not cut.exists():raise SystemExit('нет вырезанной вещи: '+name)
+  from io import BytesIO
+  from PIL import Image
+  buf=BytesIO();Image.open(cut).convert('RGBA').save(buf,'WEBP',quality=84,method=4)
+  wear_pictures[glyph]='data:image/webp;base64,'+base64.b64encode(buf.getvalue()).decode()
+ print('worn items:',len(wear_pictures))
+
 if not manifest.exists():photo_glyphs=[]
 js='/* Embedded PNG art. Twemoji graphics © Twitter, Inc and contributors, CC-BY 4.0; PICTURES-LICENSE.md. */\nconst GAME_PICTURES='+json.dumps(pictures,ensure_ascii=False,separators=(',',':'))+';\nconst TISHKA_LAYERS='+json.dumps(layers,separators=(',',':'))+';\n'\
- +'const PHOTO_GLYPHS='+json.dumps(photo_glyphs,ensure_ascii=False,separators=(',',':'))+';\n'
+ +'const PHOTO_GLYPHS='+json.dumps(photo_glyphs,ensure_ascii=False,separators=(',',':'))+';\n'\
+ +'const WEAR_PICTURES='+json.dumps(wear_pictures,ensure_ascii=False,separators=(',',':'))+';\n'
 (root/'tools/art-bundle.js').write_text(js)
 p=root/'index.html';s=p.read_text()
 if '<script id="artBundle">' in s:
