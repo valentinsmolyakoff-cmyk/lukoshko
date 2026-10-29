@@ -1369,7 +1369,7 @@ function loadArt(map,key,src){return new Promise(resolve=>{
 const picturesReady=Promise.all([
  ...Object.entries(GAME_PICTURES).map(([g,src])=>loadArt(pictureImages,pictureKey(g),src)),
  ...Object.entries(TISHKA_LAYERS).map(([k,src])=>loadArt(heroLayers,k,src))
-]).then(results=>{assetFailure=results.some(x=>!x);assetsLoaded=!assetFailure;return assetsLoaded;});
+]).then(results=>{assetFailure=results.some(x=>!x);assetsLoaded=!assetFailure;loadWearImages();return assetsLoaded;});
 const systemFillText=ctx.fillText.bind(ctx);
 function drawLabel(text,x,y,maxWidth){
   const img=pictureImages.get(pictureKey(text));
@@ -1382,14 +1382,77 @@ function drawLabel(text,x,y,maxWidth){
   if(img.complete&&img.naturalWidth){ctx.drawImage(img,left,top,w,h);return;}
   ctx.save();ctx.fillStyle='#8b4c27';ctx.font='bold 24px sans-serif';systemFillText('?',x,y);ctx.restore();
 }
-function layerNames(o){return ['base',...(o.back==='🎒'?['backpack']:[]),o.feet==='👟'?'shoes':'feet',o.paws==='🧤'?'mittens':'paws',...(o.neck==='🧣'?['scarf']:[]),...(o.eyes==='🕶️'?['glasses']:[]),...(o.head==='🎩'?['hat']:o.head==='👑'?['crown']:[]),...(o.hand&&TISHKA_LAYERS['hand:'+o.hand]?['hand:'+o.hand]:[])];}
+/* Одежда на ёжике — те же фотографии, что и в инвентаре.
+   Координаты заданы в системе картинки 300×262 (столько же, сколько у слоёв Тишки):
+   макушка, глаз, линия шеи, передние и задние лапки, спина. */
+const PHOTO_WEAR={
+  '🎒':{x:155,y:145,w:68,h:54,r:-10,z:2},
+  '🎩':{x:213,y:133,w:55,h:36,r:12,z:6},
+  '👑':{x:216,y:126,w:38,h:28,r:8,z:6},
+  '🕶️':{x:243,y:172,w:30,h:32,r:0,z:7},
+  '🧣':{x:198,y:170,w:80,h:38,r:-12,z:7},
+  '🧤':{x:228,y:232,w:28,h:29,r:6,z:7},
+  '👟':{x:192,y:231,w:58,h:41,r:0,z:7},
+};
+const HAND_LOOK={x:228,y:234,w:28,h:29,r:6,z:8};
+function wearPhotoLayers(o){
+  const out=[];
+  for(const slot of ['back','feet','paws','neck','eyes','head']){
+    const e=o[slot];if(!e)continue;
+    const look=PHOTO_WEAR[e];if(!look)continue;
+    const src=GAME_PICTURES[e]||GAME_PICTURES[pictureKey(e)];if(!src)continue;
+    out.push({src,look});
+  }
+  if(o.hand){const src=GAME_PICTURES[o.hand]||GAME_PICTURES[pictureKey(o.hand)];if(src)out.push({src,look:HAND_LOOK});}
+  return out.sort((a,b)=>a.look.z-b.look.z);
+}
+function layerNames(o){
+  const photo=new Set(wearPhotoLayers(o).map(w=>w.src));
+  const list=['base',...(o.back==='🎒'?['backpack']:[]),o.feet==='👟'?'shoes':'feet',o.paws==='🧤'?'mittens':'paws',...(o.neck==='🧣'?['scarf']:[]),...(o.eyes==='🕶️'?['glasses']:[]),...(o.head==='🎩'?['hat']:o.head==='👑'?['crown']:[]),...(o.hand&&TISHKA_LAYERS['hand:'+o.hand]?['hand:'+o.hand]:[])];
+  // если для вещи есть фотография — рисуночный слой не нужен
+  const drawn=new Set(['hat','crown','glasses','scarf','mittens','shoes','backpack']);
+  const hasPhoto=slot=>{const e=o[slot];return e&&PHOTO_WEAR[e]&&(GAME_PICTURES[e]||GAME_PICTURES[pictureKey(e)]);};
+  return list.filter(n=>{
+    if(drawn.has(n)){
+      if(n==='backpack')return !hasPhoto('back');
+      if(n==='shoes')return !hasPhoto('feet');
+      if(n==='mittens')return !hasPhoto('paws');
+      if(n==='scarf')return !hasPhoto('neck');
+      if(n==='glasses')return !hasPhoto('eyes');
+      if(n==='hat'||n==='crown')return !hasPhoto('head');
+    }
+    if(n.startsWith('hand:')&&o.hand&&(GAME_PICTURES[o.hand]||GAME_PICTURES[pictureKey(o.hand)]))return false;
+    return true;
+  });
+}
 function heroHTML(o){
  const images=layerNames(o).map((name,i)=>'<img src="'+TISHKA_LAYERS[name]+'" alt="'+(i===0?'Ёжик Тишка боком':'')+'" style="position:absolute;inset:0;width:100%;height:100%;object-fit:contain">').join('');
- return '<div class="tishkaArt" style="position:relative;width:100%;height:100%">'+images+'</div>';
+ const worn=wearPhotoLayers(o).map(({src,look})=>
+   '<img class="wearPhoto" src="'+src+'" alt="" style="left:'+(look.x/300*100).toFixed(2)+'%;top:'+(look.y/262*100).toFixed(2)+'%;'+
+   'width:'+(look.w/300*100).toFixed(2)+'%;height:'+(look.h/262*100).toFixed(2)+'%;'+
+   'transform:translate(-50%,-50%) rotate('+look.r+'deg)">').join('');
+ return '<div class="tishkaArt" style="position:relative;width:100%;height:100%">'+images+worn+'</div>';
+}
+const wearImages=new Map();
+function loadWearImages(){
+  for(const [,src] of Object.entries(GAME_PICTURES)){
+    if(wearImages.has(src)||wearImages.size>400)continue;
+    const im=new Image();im.src=src;wearImages.set(src,im);
+  }
 }
 function drawHero(o,x,y,w,h){
  for(const name of layerNames(o)){const img=heroLayers.get(name);if(img&&img.complete&&img.naturalWidth)ctx.drawImage(img,x,y,w,h);}
-
+ // одежда фотографиями: те же проценты, что и в DOM-версии, только на canvas
+ const sx=w/300, sy=h/262;
+ for(const {src,look} of wearPhotoLayers(o)){
+   const im=wearImages.get(src);if(!im||!im.complete||!im.naturalWidth)continue;
+   const cw=look.w*sx, ch=look.h*sy;
+   ctx.save();
+   ctx.translate(x+look.x*sx, y+look.y*sy);
+   ctx.rotate(look.r*Math.PI/180);
+   ctx.drawImage(im,-cw/2,-ch/2,cw,ch);
+   ctx.restore();
+ }
 }
 const EMOJI_FONT='"Segoe UI Emoji","Apple Color Emoji","Noto Color Emoji","EmojiOne Color",sans-serif';
 function emoji(txt,size){ ctx.font=size+'px '+EMOJI_FONT; return txt; }
@@ -2892,7 +2955,7 @@ document.getElementById('btnSay').onclick = ()=>{
 };
 
 /* ---------- старт ---------- */
-try{const u=new URL(location.href);u.searchParams.set('build','30');history.replaceState(null,'',u.href);}catch(e){}
+try{const u=new URL(location.href);u.searchParams.set('build','31');history.replaceState(null,'',u.href);}catch(e){}
 resize();
 document.getElementById('btnSound').textContent = save.sound?'🔊':'🔇';
 renderMenu();
@@ -2905,8 +2968,8 @@ let updatingPage=false;
 const wasControlled=!!navigator.serviceWorker?.controller;
 if('serviceWorker' in navigator){navigator.serviceWorker.addEventListener('controllerchange',()=>{
  if(!wasControlled||updatingPage||!navigator.serviceWorker.controller)return;
- if(sessionStorage.getItem('lukoshko-loaded-build')==='30')return;
- updatingPage=true;sessionStorage.setItem('lukoshko-loaded-build','30');location.reload();
+ if(sessionStorage.getItem('lukoshko-loaded-build')==='31')return;
+ updatingPage=true;sessionStorage.setItem('lukoshko-loaded-build','31');location.reload();
 });}
 
 if('serviceWorker' in navigator && (location.protocol==='http:'||location.protocol==='https:')){
