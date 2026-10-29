@@ -74,6 +74,9 @@ GLYPHS = {
     # уровни 31–60, последняя партия и пересъёмки
     '🐾': 'paw-print', '🦔': 'hedgehog', '🧭': 'compass', '⚓': 'anchor', '✈️': 'airplane',
     '🖍️': 'crayon', '🚤': 'motorboat', '📐': 'ruler',
+    # коллекция в домике Тишки (награды за звёзды)
+    '🧺': 'basket-wicker', '🍯': 'honey-pot', '🪁': 'kite', '🛴': 'scooter', '🎨': 'paints',
+    '🗺️': 'map', '🏕️': 'tent', '🐣': 'chick', '🐢': 'turtle', '🦜': 'parrot',
 }
 
 if __name__ == '__main__':

@@ -122,3 +122,42 @@ p.sub,.tiny,.skNote,.dayHead,.parentLink{color:var(--muted)}
 /* ---- build29: в домике иконки вещей такие же, как в игре (фото), а не эмодзи ---- */
 .hItem img.e{display:block;width:46px;height:46px;margin:0 auto;object-fit:contain}
 .hItem .e{min-height:46px;display:flex;align-items:center;justify-content:center}
+
+/* ---- build30: кнопки главного экрана всегда на виду ----
+   На телефоне с адресной строкой Safari высота окна бывает 560–600 px, и «Домик
+   Тишки» с «для взрослых» уезжали под нижний край. Теперь карточка меню — колонка
+   высотой в экран, панорама и задания сжимаются, а блок кнопок приклеен к низу:
+   он виден при любой высоте, а середина при нехватке места прокручивается. */
+#scrMenu{align-items:flex-start;padding:10px 12px}
+#scrMenu .card{display:flex;flex-direction:column;max-height:calc(100vh - 20px);max-height:calc(100dvh - 20px);padding-bottom:0}
+#scrMenu .menuLandscape{flex:0 0 auto}
+#scrMenu h1{margin:6px 0 2px}
+#scrMenu .rankBox,#scrMenu .dayHead,#scrMenu .dayBox{flex:0 0 auto}
+.menuActions{position:sticky;bottom:0;margin-top:auto;background:var(--paper);padding:8px 0 10px;
+  box-shadow:0 -10px 14px -8px #3a332a33}
+.menuActions .row{margin-bottom:6px}
+.menuActions .tiny{margin-top:0}
+/* невысокие экраны (телефон в Safari/Chrome с адресной строкой) */
+@media(max-height:760px){
+  .menuLandscape{height:120px}
+  #menuMascot{width:190px;height:166px;bottom:-12px}
+  #scrMenu h1{font-size:26px;margin:4px 0 0}
+  #scrMenu p.sub{margin-bottom:8px}
+  #scrMenu .rankBox{padding:8px 10px;margin-bottom:8px}
+  .dayHead{display:none}
+  .dayBox{margin-bottom:8px}
+  .dayChip{min-height:44px;padding:6px 4px;font-size:10px}
+  .menuActions .tiny{font-size:9.5px;line-height:1.35}
+}
+@media(max-height:620px){
+  .menuLandscape{height:96px}
+  #menuMascot{width:150px;height:131px;bottom:-10px}
+  #scrMenu h1{font-size:22px}
+  #scrMenu p.sub{font-size:11px}
+  #scrMenu .rankBox{padding:6px 9px;margin-bottom:6px}
+  #rankInfo{font-size:11px}
+  .dayBox{gap:5px}
+  .dayChip{min-height:38px;font-size:9.5px}
+  .menuActions .btn{font-size:14px;padding:9px 14px}
+  #scrMenu .tiny{display:none}
+}
