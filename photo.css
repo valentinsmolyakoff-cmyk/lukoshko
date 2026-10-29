@@ -186,4 +186,10 @@ p.sub,.tiny,.skNote,.dayHead,.parentLink{color:var(--muted)}
 
 /* ---- build31: вещи на ёжике — фотографии, как в инвентаре ---- */
 .tishkaArt .wearPhoto{position:absolute;object-fit:contain;pointer-events:none;
-  filter:drop-shadow(0 2px 2px #2b21163d)}
+  filter:saturate(.95) brightness(.98) contrast(1.03) drop-shadow(0 2px 2px #2b21163d)}
+.tishkaArt .wearPhoto.wearNew{animation:wearIn .34s ease-out both}
+.tishkaArt .wearShadow{position:absolute;pointer-events:none;transform:translate(-50%,-50%);
+  border-radius:50%;filter:blur(2px);
+  background:radial-gradient(closest-side,rgba(30,22,14,1),rgba(30,22,14,.45) 62%,rgba(30,22,14,0) 100%)}
+@keyframes wearIn{0%{scale:.84;opacity:0}60%{scale:1.04;opacity:1}100%{scale:1;opacity:1}}
+@media(prefers-reduced-motion:reduce){.tishkaArt .wearPhoto{animation:none}}
