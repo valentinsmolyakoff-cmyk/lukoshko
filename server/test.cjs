@@ -57,6 +57,10 @@ async function call(body,extra={}){
  for(let i=0;i<8;i++){await call({...valid,played:6+i},{headers:{origin,'content-type':'application/json','x-forwarded-for':'view23-'+i}});views.add(sent.systemInstruction.parts[0].text.split('Сегодня смотри прежде всего на: ')[1]);}
  assert.ok(views.size>1,'one and the same angle every time');
  console.log('PASS: answers are capped at a few sentences and the angle of analysis varies');
+ global.fetch=async()=>({ok:true,json:async()=>({candidates:[{content:{parts:[{text:'Ребёнок уверенно справляется с заданиями на внимание. Дальше стоит попробовать спокойный темп и'}]}}]})});
+ const cut=await call({...valid,played:7},{headers:{origin,'content-type':'application/json','x-forwarded-for':'cut23'}});
+ assert.equal(cut.status,200);assert(/[.!?…]$/.test(cut.body.text),JSON.stringify(cut.body.text));
+ console.log('PASS: a fragment cut by the token limit is not shown to the parent');
  global.fetch=real;
  if(process.env.LIVE_TEST==='1'){
   const r=await call({...valid,played:10});assert.equal(r.status,200,JSON.stringify(r));console.log('LIVE Gemini:',r.body.text);
