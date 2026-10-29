@@ -70,7 +70,10 @@ GLYPHS = {
     '🦈': 'shark', '🐳': 'whale', '🐡': 'pufferfish', '🌲': 'spruce', '🐿️': 'squirrel',
     # уровни 31–60, школа, цифры и еда
     '📕': 'book', '📚': 'books-stack', '✏️': 'pencil', '📐': 'set-square', '🧮': 'abacus',
-    '🔢': 'number-blocks', '🔟': 'number-ten', '🍕': 'pizza', '🌰': 'chestnut', '🫐': 'blueberries',
+    '🔢': 'number-block', '🔟': 'number-ten', '🍕': 'pizza', '🌰': 'chestnut', '🫐': 'blueberries',
+    # уровни 31–60, последняя партия и пересъёмки
+    '🐾': 'paw-print', '🦔': 'hedgehog', '🧭': 'compass', '⚓': 'anchor', '✈️': 'airplane',
+    '🖍️': 'crayon', '🚤': 'motorboat', '📐': 'ruler',
 }
 
 if __name__ == '__main__':
