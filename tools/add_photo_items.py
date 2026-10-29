@@ -65,6 +65,9 @@ GLYPHS = {
     # уровни 31–60, первая партия
     '🦉': 'owl', '🦊': 'fox', '🐰': 'hare', '🌊': 'wave', '🐟': 'fish-silver',
     '🐻': 'bear', '🦀': 'crab', '🚢': 'ship', '🗑️': 'bucket', '🖍️': 'crayon',
+    # уровни 31–60, лодки, море и лес
+    '⛵': 'yacht', '🛶': 'canoe', '🚤': 'motorboat', '🪼': 'jellyfish', '🐬': 'dolphin',
+    '🦈': 'shark', '🐳': 'whale', '🐡': 'pufferfish', '🌲': 'spruce', '🐿️': 'squirrel',
 }
 
 if __name__ == '__main__':
