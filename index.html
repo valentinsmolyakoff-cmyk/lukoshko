@@ -2721,11 +2721,14 @@ function localAdvice(){
 
 /* ---- Gemini через сервер: отправляем только обезличенную статистику ---- */
 function aiTextIsGood(t){
-  return typeof t==='string' && t.length>=40 && t.length<=3000 && !/<[a-z/]|```/.test(t);
+  return typeof t==='string' && t.length>=40 && t.length<=1000 && !/<[a-z/]|```/.test(t);
 }
 function adviceFacts(){
  const f=kidFacts(),n=(v,max)=>Math.max(0,Math.min(max,Math.round(Number(v)||0)));
- return {played:n(f.played,200),stars:n(f.st,600),skills:f.sk.map(({name,pct,tot})=>{const all=n(tot,10000000);return {name,ok:Math.min(all,Math.round(all*(n(pct,100)/100))),tot:all};}),
+ // Навыки уходят в обычном порядке, а не «слабейший первым»: иначе модель каждый раз
+ // цеплялась за один и тот же навык и советовала одно и то же занятие.
+ const skillOrder=Object.values(SKILLS);
+ return {played:n(f.played,200),stars:n(f.st,600),skills:f.sk.slice().sort((a,b)=>skillOrder.indexOf(a.name)-skillOrder.indexOf(b.name)).map(({name,pct,tot})=>{const all=n(tot,10000000);return {name,ok:Math.min(all,Math.round(all*(n(pct,100)/100))),tot:all};}),
  recent:(save.roundLog||[]).slice(-6).map(r=>({n:n(r.n,200),k:r.k,errs:n(r.errs,100000),sec:n(r.sec,86400)}))};
 }
 async function aiFetchAdvice(force=false,scope='parent',level=null,previousText=''){
@@ -2873,7 +2876,7 @@ document.getElementById('btnSay').onclick = ()=>{
 };
 
 /* ---------- старт ---------- */
-try{const u=new URL(location.href);u.searchParams.set('build','22');history.replaceState(null,'',u.href);}catch(e){}
+try{const u=new URL(location.href);u.searchParams.set('build','23');history.replaceState(null,'',u.href);}catch(e){}
 resize();
 document.getElementById('btnSound').textContent = save.sound?'🔊':'🔇';
 renderMenu();
@@ -2886,8 +2889,8 @@ let updatingPage=false;
 const wasControlled=!!navigator.serviceWorker?.controller;
 if('serviceWorker' in navigator){navigator.serviceWorker.addEventListener('controllerchange',()=>{
  if(!wasControlled||updatingPage||!navigator.serviceWorker.controller)return;
- if(sessionStorage.getItem('lukoshko-loaded-build')==='22')return;
- updatingPage=true;sessionStorage.setItem('lukoshko-loaded-build','22');location.reload();
+ if(sessionStorage.getItem('lukoshko-loaded-build')==='23')return;
+ updatingPage=true;sessionStorage.setItem('lukoshko-loaded-build','23');location.reload();
 });}
 
 if('serviceWorker' in navigator && (location.protocol==='http:'||location.protocol==='https:')){

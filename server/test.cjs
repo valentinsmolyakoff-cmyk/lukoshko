@@ -48,6 +48,15 @@ async function call(body,extra={}){
  const hash=require('node:crypto').createHash('sha256').update(duplicate.toLocaleLowerCase('ru').replace(/[^а-яёa-z0-9]/g,'')).digest('hex');
  const dup=await call({...valid,refresh:true,previousHash:hash},{headers:{origin,'content-type':'application/json','x-forwarded-for':'duplicate18'}});assert.equal(dup.status,502);assert.equal(dup.body.error,'duplicate_response');
  console.log('PASS: a duplicate is not claimed as a fresh answer, including after a cache miss');
+ // Короткий ответ и разный угол зрения: длинный текст обрезается по предложению,
+ // а повторный запрос не повторяет ту же мысль слово в слово.
+ global.fetch=async(url,o)=>{sent=JSON.parse(o.body);return {ok:true,json:async()=>({candidates:[{content:{parts:[{text:('Ребёнок уверенно справляется с заданиями на внимание. Дальше можно попробовать спокойный темп и короткие занятия. ').repeat(20)}]}}]})}};
+ const long=await call({...valid,played:5},{headers:{origin,'content-type':'application/json','x-forwarded-for':'long23'}});
+ assert.equal(long.status,200);assert.ok(long.body.text.length<=700,String(long.body.text.length));assert(/[.!?…]$/.test(long.body.text));
+ const views=new Set();
+ for(let i=0;i<8;i++){await call({...valid,played:6+i},{headers:{origin,'content-type':'application/json','x-forwarded-for':'view23-'+i}});views.add(sent.systemInstruction.parts[0].text.split('Сегодня смотри прежде всего на: ')[1]);}
+ assert.ok(views.size>1,'one and the same angle every time');
+ console.log('PASS: answers are capped at a few sentences and the angle of analysis varies');
  global.fetch=real;
  if(process.env.LIVE_TEST==='1'){
   const r=await call({...valid,played:10});assert.equal(r.status,200,JSON.stringify(r));console.log('LIVE Gemini:',r.body.text);
