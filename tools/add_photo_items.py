@@ -59,8 +59,12 @@ def cut(name, tolerance=34, max_side=220):
 
 # glyph -> имя вырезки
 GLYPHS = {
+    # первые 30 уровней
     '🍀': 'clover', '🔇': 'sign-mute', '🐝': 'bee', '🍒': 'cherry',
     '🅰️': 'letter-block', '🍞': 'bread', '🌳': 'tree', '🚲': 'bicycle', '🐜': 'ant',
+    # уровни 31–60, первая партия
+    '🦉': 'owl', '🦊': 'fox', '🐰': 'hare', '🌊': 'wave', '🐟': 'fish-silver',
+    '🐻': 'bear', '🦀': 'crab', '🚢': 'ship', '🗑️': 'bucket', '🖍️': 'crayon',
 }
 
 if __name__ == '__main__':

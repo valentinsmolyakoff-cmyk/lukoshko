@@ -10,9 +10,9 @@ try:
   page.goto(url);page.evaluate('async()=>{await navigator.serviceWorker.register("test-old-worker13.js");await navigator.serviceWorker.ready;localStorage.setItem("update-progress-test","keep")}');page.wait_for_function('()=>!!navigator.serviceWorker.controller')
   page.unroute(url)
   page.evaluate('async()=>{await navigator.serviceWorker.register("sw.js",{updateViaCache:"none"})}')
-  page.wait_for_url('**build=24',timeout=30000);page.evaluate('()=>picturesReady')
+  page.wait_for_url('**build=25',timeout=30000);page.evaluate('()=>picturesReady')
   assert page.evaluate('()=>assetsLoaded');assert page.evaluate('()=>localStorage.getItem("update-progress-test")')=='keep'
-  page.wait_for_function("async()=>{const c=await caches.open('lukoshko-v24');return !!(await c.match('./index.html'))}")
+  page.wait_for_function("async()=>{const c=await caches.open('lukoshko-v25');return !!(await c.match('./index.html'))}")
   c.set_offline(True);page.reload(wait_until='domcontentloaded');page.evaluate('()=>picturesReady');assert page.evaluate('()=>assetsLoaded')
   page.evaluate('()=>{save.sound=false;startLevel(7);startRound(G.level.r.findIndex(r=>r.k==="odd"))}')
   assert page.evaluate('()=>R.spec.k')=='odd'
