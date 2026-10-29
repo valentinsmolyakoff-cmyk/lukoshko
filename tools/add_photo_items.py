@@ -68,6 +68,9 @@ GLYPHS = {
     # уровни 31–60, лодки, море и лес
     '⛵': 'yacht', '🛶': 'canoe', '🚤': 'motorboat', '🪼': 'jellyfish', '🐬': 'dolphin',
     '🦈': 'shark', '🐳': 'whale', '🐡': 'pufferfish', '🌲': 'spruce', '🐿️': 'squirrel',
+    # уровни 31–60, школа, цифры и еда
+    '📕': 'book', '📚': 'books-stack', '✏️': 'pencil', '📐': 'set-square', '🧮': 'abacus',
+    '🔢': 'number-blocks', '🔟': 'number-ten', '🍕': 'pizza', '🌰': 'chestnut', '🫐': 'blueberries',
 }
 
 if __name__ == '__main__':
