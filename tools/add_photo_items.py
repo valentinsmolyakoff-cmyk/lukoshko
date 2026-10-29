@@ -77,6 +77,7 @@ GLYPHS = {
     # коллекция в домике Тишки (награды за звёзды)
     '🧺': 'basket-wicker', '🍯': 'honey-pot', '🪁': 'kite', '🛴': 'scooter', '🎨': 'paints',
     '🗺️': 'map', '🏕️': 'tent', '🐣': 'chick', '🐢': 'turtle', '🦜': 'parrot',
+    '🦕': 'dino', '🏰': 'castle', '🛸': 'ufo', '🌈': 'rainbow', '🏆': 'trophy', '💎': 'diamond',
 }
 
 if __name__ == '__main__':
