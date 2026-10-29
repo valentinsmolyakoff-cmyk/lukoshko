@@ -87,3 +87,38 @@ p.sub,.tiny,.skNote,.dayHead,.parentLink{color:var(--muted)}
 
 /* В кабинете родителей факты отделены от рекомендации ИИ. */
 .fact{background:#f1eddf;border:1px solid #d8c9a9;border-radius:14px;padding:11px 14px;margin:14px 0;font-weight:700;color:#4a4a38;font-size:14px;line-height:1.45}
+
+/* ---- build29: ёжик в домике целиком в кадре ----
+   Раньше персонаж растягивался по ширине сцены (84%), из-за чего вылезал за её верх
+   и обрезался: морда пропадала, а шапка и шарф «висели» мимо тела. Теперь рост
+   считается от высоты сцены, а ширина выводится из пропорции картинки 300×262 —
+   одежда рисуется в тех же координатах, поэтому снова садится по месту. */
+#tishkaScene{position:relative;aspect-ratio:6/4}
+#tishkaScene #tishkaBody{position:absolute;inset:auto auto 1.5% 50%;height:94%;width:auto;
+  aspect-ratio:300/262;transform:translateX(-50%);filter:drop-shadow(0 7px 4px #32261655)}
+#tishkaScene .tishkaArt img{object-fit:contain}
+
+/* ---- build29: на главной все кнопки помещаются без прокрутки ---- */
+@media(max-width:520px){
+  #scrMenu .card{padding:0 16px 16px}
+  .menuLandscape{height:150px;margin:0 -16px 10px}
+  #menuMascot{width:230px;height:201px;bottom:-14px}
+  .landscapeLabel{top:10px;font-size:8px;padding:6px 9px}
+  #scrMenu h1{font-size:30px;margin:8px 0 4px}
+  #scrMenu p.sub{font-size:12px;margin-bottom:10px}
+  #scrMenu .rankBox{padding:10px 12px;margin-bottom:10px}
+  #rankName{font-size:14px}#rankInfo{font-size:11px}
+  .dayHead{font-size:10px;margin-bottom:4px}
+  .dayBox{gap:6px;margin-bottom:10px}
+  .dayChip{min-height:52px;padding:7px 5px;font-size:10.5px}
+  #scrMenu .row{gap:6px;margin-bottom:6px}
+  #btnPlay{min-width:0;font-size:16px;padding:12px 18px}
+  #btnMap{font-size:14px;padding:12px 14px}
+  #btnHouse{font-size:13px;padding:11px 14px}
+  #btnParent{font-size:13px;padding:11px 14px}
+  #scrMenu .tiny{font-size:10px;margin-top:8px}
+}
+
+/* ---- build29: в домике иконки вещей такие же, как в игре (фото), а не эмодзи ---- */
+.hItem img.e{display:block;width:46px;height:46px;margin:0 auto;object-fit:contain}
+.hItem .e{min-height:46px;display:flex;align-items:center;justify-content:center}

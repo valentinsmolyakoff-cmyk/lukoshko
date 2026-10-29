@@ -17,3 +17,7 @@ __pycache__/
 tools/picture-source/
 
 tools/art-bundle.js
+
+# исходники фотографий: тяжёлые, нужны только для повторной нарезки
+assets/photo/*-source.png
+assets/photo/*-source.jpg
